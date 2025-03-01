@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pluto Dashboard{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom Styles */
+        .sidebar-nav li a {
+            display: block;
+            padding: 12px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-nav li a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+
+        .main-content {
+            background: #f8fafc;
+            min-height: calc(100vh - 80px);
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .online {
+            background: #48bb78;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <!-- Sidebar -->
+    <div class="fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-4 border-r border-gray-700">
+        <div class="flex items-center mb-6">
+            <img src="https://placehold.co/56x56/3b82f6/fff?text=JD" alt="Profile Picture" class="w-14 h-14 rounded-full border-2 border-blue-400">
+            <div class="ml-3">
+                <h3 class="text-lg font-semibold">John David</h3>
+                <div class="flex items-center">
+                    <span class="text-sm text-gray-300">Online</span>
+                    <span class="status-indicator online"></span>
+                </div>
+            </div>
+        </div>
+
+        <nav class="mt-4">
+            <ul class="sidebar-nav">
+                <li class="mb-2"><a href="{% url 'dashboard'%}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700">
+                    <span class="mr-2">🪑</span>
+                    dashboard
+                </a></li>
+                <li class="mb-2"><a href="{% url 'admin_catering_orders'%}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700">
+                    <span class="mr-2">📋</span>
+                    Order List
+                </a></li>
+                <li class="mb-2"><a href="{% url 'add_category' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700">
+                    <span class="mr-2">➕</span>
+                    Add Menu
+                </a></li>
+                <li class="mb-2"><a href="{% url 'menu_report' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700">
+                    <span class="mr-2">📊</span>
+                    Report
+                </a></li>
+               
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ml-64 p-4">
+        <header class="flex justify-between items-center bg-gray-800 text-white p-4 shadow-lg">
+            <div class="header-logo">
+                <img src="{% static 'images/download.png' %}" alt="Profile Picture" class="w-14 h-14  border-2 border-black-400">
+
+                <span class="ml-2 text-xl font-bold">Pluto Dashboard</span>
+            </div>
+             <!-- Notification Bell -->
+    <div class="relative">
+        <button id="orderNotification" class="relative">
+            <i class="fas fa-bell text-2xl"></i>
+            <span id="orderBadge" class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">!</span>
+        </button>
+    </div>
+        </header>
+
+        <main class="main-content mt-4 p-6">
+            {% block content %}
+            <!-- Page-specific content will go here -->
+            {% endblock %}
+        </main>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Example: Fetch the number of pending orders dynamically (this should come from Django)
+            let pendingOrders = {{ pending_orders|default:0 }}; // Django variable
+    
+            if (pendingOrders > 0) {
+                document.getElementById("orderBadge").classList.remove("hidden");
+                document.getElementById("orderBadge").innerText = pendingOrders; // Show count
+            }
+        });
+        function fetchPendingOrders() {
+            fetch("{% url 'get_pending_orders' %}")  // Call Django API
+                .then(response => response.json())
+                .then(data => {
+                    let orderBadge = document.getElementById("orderBadge");
+    
+                    if (data.pending_orders > 0) {
+                        orderBadge.classList.remove("hidden");
+                        orderBadge.innerText = data.pending_orders;
+                    } else {
+                        orderBadge.classList.add("hidden");
+                    }
+                })
+                .catch(error => console.error("Error fetching orders:", error));
+        }
+    
+        // Fetch orders when the page loads
+        fetchPendingOrders();
+    
+        // Auto-refresh every 10 seconds
+        setInterval(fetchPendingOrders, 10000);
+    
+        
+    </script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+{% extends 'base/admin_base.html' %}
+
+{% block content %}
+<main class="container mx-auto p-4">
+    <h1 class="text-2xl font-semibold mb-4">Menu Items</h1>
+
+     <!-- Category Filter -->
+     <form method="GET" action="{% url 'add_menu_item' %}" id="categoryForm">
+        <label for="categoryFilter" class="block text-gray-700 font-medium">Filter by Category:</label>
+        <select name="category" id="categoryFilter" class="mb-4 p-2 border rounded" onchange="this.form.submit();">
+            <option value="all" {% if selected_category == "all" %}selected{% endif %}>All Categories</option>
+            {% for category in categories %}
+                <option value="{{ category.id }}" {% if selected_category|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>
+                    {{ category.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+    
+
+    <!-- Add Item Button -->
+    <button onclick="openModal()" class="mb-4 bg-green-500 text-white px-4 py-2 rounded">
+        Add New Item
+    </button>
+
+  <!-- Menu List -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for item in menu_items %}
+    <div class="bg-white p-4 rounded shadow" id="menu-item-{{ item.id }}">
+        {% if item.image %}
+            <img src="{{ item.image.url }}" class="w-full h-40 object-cover rounded">
+        {% endif %}
+        <h2 class="text-lg font-semibold">{{ item.name }}</h2>
+        <p class="text-gray-600">{{ item.description }}</p>
+        <p class="text-xl font-bold text-green-600">${{ item.price }}</p>
+        <p class="text-sm text-gray-500">{{ item.category.name }}</p>
+        <p class="text-sm font-medium {% if item.available %}text-green-500{% else %}text-red-500{% endif %}">
+            {% if item.available %} Available {% else %} Not Available {% endif %}
+        </p>
+
+        <!-- Edit & Delete Buttons -->
+        <div class="flex gap-2 mt-2">
+            <!-- Edit Button -->
+            <button onclick="openEditModal({{ item.id }}, '{{ item.name }}', '{{ item.description }}', '{{ item.price }}', '{{ item.category.id }}', '{{ item.available }}')"
+            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            Edit
+            </button>
+
+            <button onclick="deleteMenuItem({{ item.id }})" 
+                    class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                Delete
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+    
+    <!-- JavaScript for AJAX Delete -->
+    <script>
+           if (!confirm("Are you sure you want to delete this item?")) {
+                return;
+            }
+    
+            fetch(`/menu/delete/${itemId}/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",  // Pass CSRF token for security
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById(`menu-item-${itemId}`).remove();  // Remove item from DOM
+                } else {
+                    alert("Failed to delete item.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }  function deleteMenuItem(itemId) {
+       
+    </script>
+    
+    <!-- Add Item Modal -->
+    <div id="addItemModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded shadow w-96">
+            <h2 class="text-xl font-semibold mb-4">Add New Menu Item</h2>
+            <form id="addItemForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Add Item</button>
+                <button type="button" onclick="closeModal()" class="ml-2 bg-gray-400 text-white px-4 py-2 rounded">Cancel</button>
+            </form>
+        </div>
+    </div>
+</main>
+<!-- Edit Item Modal -->
+<div id="editItemModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-6 rounded shadow w-96">
+        <h2 class="text-xl font-semibold mb-4">Edit Menu Item</h2>
+        <form id="editItemForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" id="editItemId">
+            
+            <label class="block font-medium">Name:</label>
+            <input type="text" id="editItemName" name="name" class="w-full border p-2 rounded mb-2">
+
+            <label class="block font-medium">Description:</label>
+            <input type="text" id="editItemDescription" name="description" class="w-full border p-2 rounded mb-2">
+
+            <label class="block font-medium">Price:</label>
+            <input type="text" id="editItemPrice" name="price" class="w-full border p-2 rounded mb-2">
+
+            <label class="block font-medium">Image:</label>
+            <input type="file" id="editItemImage" name="image" class="w-full border p-2 rounded mb-2">
+
+            <label class="block font-medium">Category:</label>
+            <select id="editItemCategory" name="category" class="w-full border p-2 rounded mb-2">
+                {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label class="block font-medium">Availability:</label>
+            <select id="editItemAvailable" name="available" class="w-full border p-2 rounded mb-2">
+                <option value="true">Available</option>
+                <option value="false">Not Available</option>
+            </select>
+
+            <!-- Buttons -->
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-400 text-white rounded">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+        // Function to open the "Add Item" modal
+        function openModal() {
+            document.getElementById("addItemModal").classList.remove("hidden");
+        }
+    
+        // Function to close the "Add Item" modal
+        function closeModal() {
+            document.getElementById("addItemModal").classList.add("hidden");
+        }
+    
+        // Handle form submission for adding a new menu item
+        document.getElementById("addItemForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            let formData = new FormData(this);
+    
+            fetch("{% url 'add_menu_item' %}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Item added successfully!");
+                    closeModal();
+                    location.reload(); // Refresh menu list
+                } else {
+                    alert("Error adding item.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    
+        // Function to open the "Edit Item" modal
+        function openEditModal(id, name, description, price, categoryId, available) {
+            document.getElementById("editItemId").value = id;
+            document.getElementById("editItemName").value = name;
+            document.getElementById("editItemDescription").value = description;
+            document.getElementById("editItemPrice").value = price;
+            document.getElementById("editItemCategory").value = categoryId;
+            document.getElementById("editItemAvailable").value = available.toString();
+    
+            document.getElementById("editItemModal").classList.remove("hidden");
+        }
+    
+        // Function to close the "Edit Item" modal
+        function closeEditModal() {
+            document.getElementById("editItemModal").classList.add("hidden");
+        }
+    
+        // Handle form submission for editing an item
+        document.getElementById("editItemForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+    
+            const itemId = document.getElementById("editItemId").value;
+            const formData = new FormData(this);
+    
+            fetch(`/menu/edit/${itemId}/`, {  // ✅ Correct URL path
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Item updated successfully!");
+                    window.location.reload();
+                } else {
+                    alert("Error updating item.");
+                }
+            });
+        });
+    
+        // Function to delete a menu item
+        function deleteMenuItem(itemId) {
+            if (!confirm("Are you sure you want to delete this item?")) {
+                return;
+            }
+    
+            fetch(`/menu/delete/${itemId}/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",  // Pass CSRF token for security
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById(`menu-item-${itemId}`).remove();  // Remove item from DOM
+                } else {
+                    alert("Failed to delete item.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+    
+
+{% endblock %} 
+
+
+
+old menu

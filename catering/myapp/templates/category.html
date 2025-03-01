@@ -1,0 +1,108 @@
+{% extends 'base/admin_base.html' %}
+{% block content %}
+<main class="container mx-auto p-4">
+    <h1 class="text-2xl font-semibold mb-4">Menu Items</h1>
+
+    <!-- Category List -->
+    <div class="mb-6">
+        <h2 class="text-2xl font-semibold mb-2">Categories</h2>
+        <ul class="flex flex-wrap gap-2">
+            {% for category in categories %}
+                <li class="bg-gray-200 px-3 py-1 rounded text-sm font-medium">
+                    {{ category.name }}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Menu List -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for category in categories %}
+    <a href="{% url 'add_menu_item' %}?category={{ category.id }}" id="menu-item-{{ category.id }}" 
+        class="border rounded-lg overflow-hidden shadow-sm block hover:shadow-md transition duration-200">
+        
+        {% if category.image %}
+            <img src="{{ category.image.url }}" class="w-full h-40 object-cover rounded-t-lg">
+        {% else %}
+            <p class="text-sm text-gray-500 text-center py-16">No Image Available</p>
+        {% endif %}
+
+        <div class="p-4">
+            <p class="text-sm text-gray-500 font-bold">{{ category.name }}</p>
+
+            <!-- Menu Items Inside the Category -->
+            {% for item in menu_items %}
+                {% if item.category.id == category.id %}
+                    <p class="text-sm font-medium {% if item.available %}text-green-500{% else %}text-red-500{% endif %}">
+                        {{ item.name }} - {% if item.available %} Available {% else %} Not Available {% endif %}
+                    </p>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </a>
+    {% empty %}
+        <p class="text-sm text-gray-500 col-span-full text-center">No categories available.</p>
+    {% endfor %}
+</div>
+    <!-- Add Category Modal -->
+<div id="addItemModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-6 rounded shadow w-96">
+        <h2 class="text-xl font-semibold mb-4">Add New Category</h2>
+        
+        <form id="addItemForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}  <!-- Using Django Form -->
+
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Add Category</button>
+            <button type="button" onclick="closeModal()" class="ml-2 bg-gray-400 text-white px-4 py-2 rounded">Cancel</button>
+        </form>
+    </div>
+</div>
+
+<!-- Add Item Button -->
+<button onclick="openModal()" class="fixed bottom-4 right-4 bg-blue-500 text-white px-6 py-3 rounded-full shadow-lg">
+    Add New Item
+</button>
+
+<!-- JavaScript -->
+<script>
+    // Function to open modal
+    function openModal() {
+        document.getElementById("addItemModal").classList.remove("hidden");
+    }
+
+    // Function to close modal
+    function closeModal() {
+        document.getElementById("addItemModal").classList.add("hidden");
+    }
+
+    // Handle form submission via AJAX
+    document.getElementById("addItemForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+        let formData = new FormData(this);
+
+        fetch("{% url 'add_category' %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Item added successfully!");
+                closeModal();
+                location.reload();
+            } else {
+                alert("Error adding item.");
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    });
+</script>
+
+   
+
+{% endblock %}

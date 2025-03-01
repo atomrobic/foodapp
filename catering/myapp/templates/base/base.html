@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Catering Project{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-element-bundle.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- AOS Library -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+</head>
+<body class="bg-gray-400 font-sans">
+
+    <!-- Navbar -->
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            
+            <!-- Left Section -->
+            <div class="flex items-center space-x-4">
+                <img src="{% static 'images/download.png' %}" alt="Logo" class="w-14 h-14 border-2 border-gray-400">
+                <div class="text-2xl font-bold text-gray-800">CATERING <span class="text-blue-600">PROJECT.</span></div>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <div class="md:hidden" x-data="{ open: false }">
+                <button @click="open = !open" class="text-gray-700 focus:outline-none">
+                    ☰
+                </button>
+                <div x-show="open" class="absolute top-16 left-0 w-full bg-white shadow-md flex flex-col space-y-2 p-4">
+                    <a href="#" class="block text-gray-700 hover:text-blue-600">Home</a>
+                    <a href="#" class="block text-gray-700 hover:text-blue-600">Menu</a>
+                    <a href="#" class="block text-gray-700 hover:text-blue-600">Services</a>
+                    <a href="#" class="block text-gray-700 hover:text-blue-600">About</a>
+                    <a href="#" class="block text-gray-700 hover:text-blue-600">Contact</a>
+                </div>
+            </div>
+
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex space-x-6">
+                <a href="#" class="text-gray-700 hover:text-blue-600">Home</a>
+                <a href="#" class="text-gray-700 hover:text-blue-600">Menu</a>
+                <a href="#" class="text-gray-700 hover:text-blue-600">Services</a>
+                <a href="#" class="text-gray-700 hover:text-blue-600">About</a>
+                <a href="#" class="text-gray-700 hover:text-blue-600">Contact</a>
+            </div>
+
+            <!-- Right Section -->
+            <div class="hidden md:flex items-center space-x-4">
+                <!-- Search Bar -->
+                <div class="hidden md:flex items-center space-x-2">
+                    <input type="text" placeholder="Search..." class="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300">🔍</button>
+                </div>
+
+                <!-- Profile Dropdown -->
+                {% if user.is_authenticated %}
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center space-x-2 focus:outline-none">
+                            <img src="https://ui-avatars.com/api/?name=User&size=50" alt="Profile" class="w-8 h-8 rounded-full">
+                            <span class="text-gray-700">{{ user.username }}</span>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                            <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Dashboard</a>
+                            <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Orders</a>
+                            <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Settings</a>
+                            <hr class="my-1">
+                            <a href="{% url 'logout' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Logout</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{% url 'register' %}" class="text-gray-700 hover:text-blue-600">Login / Signup</a>
+                {% endif %}
+
+                <!-- Cart -->
+                <a href="/cart" class="text-white relative">
+                    🛒 Cart <span id="cart-count" class="bg-red-500 text-white px-2 rounded-full">0</span>
+                </a>
+                            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+
+
+    
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8">
+    {% block content %}{% endblock %}
+</main>
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center py-4 mt-10">
+        <p>&copy; 2025 Catering Project. All rights reserved.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.5/dist/cdn.min.js"></script>
+
+</body>
+</html>

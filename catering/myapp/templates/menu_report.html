@@ -1,0 +1,38 @@
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+    <h1 class="text-2xl font-bold mb-4">Menu Report</h1>
+
+    <!-- CSV Download Button -->
+    <a href="?download_csv=true" class="bg-green-500 text-white px-4 py-2 rounded-md mb-4 inline-block">
+        Download CSV
+    </a>
+
+    <!-- Report Table -->
+    <table class="w-full border-collapse border border-gray-300 mt-4">
+        <thead>
+            <tr class="bg-gray-200">
+                <th class="border px-4 py-2">Category</th>
+                <th class="border px-4 py-2">Menu Item</th>
+                <th class="border px-4 py-2">Price</th>
+                <th class="border px-4 py-2">Availability</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+                {% for item in category.menu_items.all %}
+                    <tr>
+                        <td class="border px-4 py-2">{{ category.name }}</td>
+                        <td class="border px-4 py-2">{{ item.name }}</td>
+                        <td class="border px-4 py-2">${{ item.price }}</td>
+                        <td class="border px-4 py-2 {% if item.available %}text-green-500{% else %}text-red-500{% endif %}">
+                            {% if item.available %} Available {% else %} Not Available {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

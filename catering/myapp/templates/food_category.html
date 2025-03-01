@@ -1,0 +1,30 @@
+{% extends 'base.html' %}  {# Replace with your base template name #}
+
+{% block content %}
+<h2 class="text-xl font-bold mb-4">Menu Items</h2>
+
+<form method="GET" action="{% url 'menu_view_category' %}" id="categoryForm">
+    <label for="categoryFilter" class="block text-gray-700 font-medium">Filter by Category:</label>
+    <select name="category" id="categoryFilter" class="mb-4 p-2 border rounded" onchange="this.form.submit();">
+        <option value="all" {% if selected_category == "all" %}selected{% endif %}>All Categories</option>
+        {% for category in categories %}
+            <option value="{{ category.id }}" {% if selected_category|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>
+                {{ category.name }}
+            </option>
+        {% endfor %}
+    </select>
+</form>
+
+
+<!-- Display Filtered Menu Items -->
+<ul class="list-disc pl-5">
+    {% for item in menu_items %}
+        <li class="py-2">
+            <strong>{{ item.name }}</strong> - {{ item.category.name }} - ${{ item.price }}
+        </li>
+    {% empty %}
+        <li>No menu items found.</li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

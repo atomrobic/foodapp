@@ -1,0 +1,52 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+
+{% load static %}
+
+<div class="container mx-auto p-6">
+    <!-- Dashboard Layout -->
+    <div class="flex flex-wrap lg:flex-nowrap gap-6">
+        <!-- Sidebar -->
+        <aside class="w-full lg:w-1/4 bg-gray-100 p-4 rounded-lg shadow-md">
+            <h2 class="text-lg font-semibold text-gray-800">User Dashboard</h2>
+            <ul class="mt-4 space-y-2">
+                <li><a href="" class="block px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white">Profile</a></li>
+                <li><a href="" class="block px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white">Order History</a></li>
+                <li><a href="" class="block px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white">Saved Items</a></li>
+                <li><a href="" class="block px-4 py-2 bg-red-500 text-white rounded-lg text-center hover:bg-red-600">Logout</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Dashboard Content -->
+        <main class="w-full lg:w-3/4 bg-white p-6 rounded-lg shadow-md">
+            <div class="flex items-center gap-4">
+                <img src="{{ user.profile.image.url }}" alt="Profile Picture" class="w-16 h-16 rounded-full">
+                <div>
+                    <h2 class="text-xl font-semibold">{{ user.username }}</h2>
+                    <p class="text-gray-600">{{ user.email }}</p>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <section class="mt-6">
+                <h3 class="text-lg font-semibold text-gray-800">Recent Orders</h3>
+                {% if orders %}
+                    <div class="mt-4 space-y-4">
+                        {% for order in orders %}
+                        <div class="p-4 border rounded-lg shadow-sm">
+                            <p class="font-semibold">{{ order.item_name }}</p>
+                            <p class="text-sm text-gray-600">Ordered on: {{ order.order_date }}</p>
+                            <p class="text-sm text-green-600">Status: {{ order.status }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-600 mt-2">No recent orders.</p>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</div>
+
+{% endblock %}

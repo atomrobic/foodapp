@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catering Order</title>
+</head>
+<body>
+    <h2>Place a Catering Order</h2>
+    <form method="POST" action="{}">
+        {% csrf_token %}
+        
+        <label for="name">Your Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="email">Your Email:</label>
+        <input type="email" id="email" name="email" required><br><br>
+
+        <label for="phone">Phone Number:</label>
+        <input type="text" id="phone" name="phone" required><br><br>
+
+        <label for="event_type">Event Type:</label>
+        <select id="event_type" name="event_type" required>
+            <option value="wedding">Wedding</option>
+            <option value="birthday">Birthday</option>
+            <option value="corporate">Corporate Event</option>
+            <option value="other">Other</option>
+        </select><br><br>
+
+        <label for="date">Event Date:</label>
+        <input type="date" id="date" name="event_date" required><br><br>
+
+        <label for="quantity">Number of Guests:</label>
+        <input type="number" id="quantity" name="quantity" required><br><br>
+
+        <label for="menu">Menu Selection:</label>
+        <textarea id="menu" name="menu" rows="4" required></textarea><br><br>
+
+        <button type="submit">Submit Order</button>
+    </form>
+</body>
+</html>

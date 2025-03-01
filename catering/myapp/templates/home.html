@@ -1,0 +1,388 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+
+{% load static %}
+
+<style>
+    /* Hide Scrollbar */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .scrollbar-hide {
+        -ms-overflow-style: none; 
+        scrollbar-width: none;
+    }
+
+    /* Parallax Effect */
+    .parallax-banner {
+        transition: transform 0.3s ease-out;
+    }
+</style>
+
+<!-- Carousel Container -->
+<section id="banner-carousel" class="w-full max-w-6xl mx-auto overflow-hidden relative">
+    <div id="carousel-inner" class="flex snap-x snap-mandatory overflow-x-auto scrollbar-hide">
+        {% for banner in banners %}
+        <div class="w-full flex-shrink-0 snap-center relative parallax-banner">
+            <div class="relative bg-white rounded-lg shadow-md h-64 overflow-hidden">
+                {% if banner.image %}
+                <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="w-full h-full object-cover">
+                {% else %}
+                <img src="https://via.placeholder.com/600x300" alt="Default Image" class="w-full h-full object-cover">
+                {% endif %}
+                <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white p-4">
+                    <h2 class="text-lg font-semibold">{{ banner.title }}</h2>
+                    <p class="text-sm">{{ banner.description }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+ <!-- Category Filter (Only Shows Categories) -->
+
+<!-- Category Filter (Only Shows Categories) -->
+
+
+<!-- Menu Section -->
+<section class="w-full max-w-6xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4" id="menuTitle">All Menu Items</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="menuContainer">
+        {% for item in menu_items %}
+        <div class="bg-gray-100 p-4 rounded-lg shadow-md transition duration-300 menu-item relative group"
+             data-category="{{ item.category.name }}">
+                 
+            <!-- Image -->
+            <div class="relative w-full h-32 overflow-hidden rounded-md">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-full object-cover transition-transform duration-500 transform-gpu hover:scale-110">
+                {% else %}
+                <img src="https://via.placeholder.com/150" alt="No Image" class="w-full h-full object-cover transition-transform duration-500 transform-gpu hover:scale-110">
+                {% endif %}
+                
+                <!-- Animation Inside the Card -->
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-blue-500 animate-loop"></div>
+            </div>
+            
+            <!-- Title -->
+            <h3 class="text-lg font-semibold mt-2">{{ item.name }}</h3>
+            
+            <!-- Description -->
+            <p class="text-gray-600 text-sm">{{ item.description }}</p>
+            
+            <!-- Price -->
+            <p class="text-lg font-bold text-blue-600 mt-1">₹{{ item.price }}</p>
+            
+            <!-- Buttons (Initially Hidden) -->
+            <div class="flex gap-2 mt-2 opacity-0 transition-opacity duration-300 absolute left-0 right-0 bottom-4 px-4 group-hover:opacity-100">
+                <form class="add-to-cart-form" data-id="{{ item.id }}">
+                    {% csrf_token %}
+                    <button type="button" class="add-to-cart-btn bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-lg">
+                        Add to Cart
+                    </button>
+                </form>
+                <a href="{% url 'menu_item_detail' item.id %}" 
+                   class="flex-1 text-center px-1 py-1 bg-gray-300 text-black rounded-md hover:bg-gray-500 hover:text-white transition duration-300">
+                    View Details
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Styles -->
+<style>
+    /* Animation for looping effect */
+    @keyframes loop {
+        0% {
+            width: 0%;
+        }
+        100% {
+            width: 100%;
+        }
+    }
+
+    /* Apply the animation to the blue bar inside the card */
+    .animate-loop {
+        animation: loop 5s linear infinite;
+    }
+
+    /* Hover animation for images */
+    .menu-item img {
+        transition: transform 0.5s ease-in-out;
+    }
+
+    /* Disable hover scaling effect for a smoother experience */
+    .menu-item img:hover {
+        transform: scale(1); /* Remove hover scaling */
+    }
+
+    /* Initial hidden state for menu items */
+    .menu-item {
+        display: none;
+        opacity: 0;
+        transform: scale(0.9);
+        transition: opacity 0.5s ease-in-out, transform 0.3s ease-in-out;
+    }
+
+    /* Visible state for menu items */
+    .menu-item.active {
+        display: block;
+        opacity: 1;
+        transform: scale(1);
+    }
+</style>
+
+
+<!-- Full-Width Image -->
+<section class="w-full mt-5">
+    <img src="https://www.licious.in/blog/wp-content/uploads/2022/04/shutterstock_460012054-1-min.jpg" alt="Catering Banner" class="w-full h-40 object-cover">
+</section>
+
+<!-- Featured Products Grid with Background -->
+<section class="mt-8 bg-gray-100 p-6 rounded-lg shadow-md">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for category in categories %}
+        <div class="bg-white p-4 rounded-lg shadow-md">
+            {% if category.image %}
+            <img src="{{ category.image.url }}" alt="{{ category.name }}" class="w-full h-48 object-cover rounded-md">
+            {% else %}
+            <div class="w-full h-48 flex items-center justify-center bg-gray-300 rounded-md">
+                <p class="text-gray-600 font-semibold">No Image Available</p>
+            </div>
+            {% endif %}
+            <p class="mt-2 text-gray-600 font-semibold">{{ category.name }}</p>
+            <a href="{% url 'menu_item_detail' category.id %}" class="text-blue-500">More details</a>
+        </div>
+        {% endfor %}
+    </div>
+<!-- Loop through categories and list food items under each -->
+{% for category in categories %}
+    {% if category.menu_items.all %}
+        <section class="mt-8 bg-gray-400 p-6 rounded-lg shadow-md">  
+            <h2 class="text-2xl font-bold mb-4 text-gray-800" data-aos="fade-in">{{ category.name }}</h2>
+
+            <!-- Grid Layout for Menu Items -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {% for item in category.menu_items.all %}
+                <div class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition relative" data-aos="fade-up">
+                    <a href="{% url 'menu_item_detail' item.id %}" class="block">
+                        {% if item.image %}
+                            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-32 object-cover rounded-md">
+                        {% else %}
+                            <img src="https://via.placeholder.com/150" alt="No Image" class="w-full h-32 object-cover rounded-md">
+                        {% endif %}
+                        <h3 class="text-lg font-semibold mt-2">{{ item.name }}</h3>
+                        <p class="text-gray-600 text-sm">{{ item.description }}</p>
+                        <p class="text-lg font-bold text-blue-600 mt-1">₹{{ item.price }}</p>
+                    </a>
+
+                    <!-- Add to Cart Button (Fixed) -->
+                    <div class="absolute bottom-2 right-2 opacity-100 transition-opacity duration-300">
+                        <form class="add-to-cart-form" data-id="{{ item.id }}">
+                            {% csrf_token %}
+                            <button type="button" class="add-to-cart-btn bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-lg">
+                                Add to Cart
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+{% endfor %}
+
+<!-- Cart Count Badge -->
+
+<!-- Include JavaScript -->
+<script src="{% static 'js/cart.js' %}"></script>
+
+
+
+<!-- Contact Us -->
+<section class="my-10 text-center">
+    <h2 class="text-2xl font-semibold">Contact Us</h2>
+    <form class="flex flex-col gap-4 mt-4 max-w-md mx-auto">
+        <input type="text" placeholder="Your Name" required class="p-2 border rounded">
+        <input type="email" placeholder="Your Email" required class="p-2 border rounded">
+        <textarea placeholder="Your Message" required class="p-2 border rounded"></textarea>
+        <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Send</button>
+    </form>
+</section>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        function getCSRFToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]').value;
+        }
+    
+        document.querySelectorAll(".add-to-cart-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                let form = this.closest(".add-to-cart-form");
+                let itemId = form.getAttribute("data-id");
+    
+                fetch(`/cart/add/${itemId}/`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": getCSRFToken(),
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message); // Show success message
+                    updateCartCount(); // Refresh cart count
+                })
+                .catch(error => console.error("Error:", error));
+            });
+        });
+    
+        function updateCartCount() {
+            fetch("/cart/count/")  // Fetch latest cart count
+                .then(response => response.json())
+                .then(data => {
+                    let cartCountElement = document.getElementById("cart-count");
+                    if (cartCountElement) {
+                        cartCountElement.innerText = data.count;
+                    }
+                })
+                .catch(error => console.error("Error updating cart count:", error));
+        }
+    });
+    
+document.addEventListener("DOMContentLoaded", function () {
+    const bannerCarousel = document.querySelector("#banner-carousel .overflow-x-auto");
+    let isUserScrolling = false;
+    
+    if (!bannerCarousel) return;
+
+    function autoScroll() {
+        if (!isUserScrolling) {
+            bannerCarousel.scrollBy({ left: bannerCarousel.clientWidth, behavior: "smooth" });
+        }
+    }
+
+    let interval = setInterval(autoScroll, 4000);
+
+    bannerCarousel.addEventListener("mouseover", () => {
+        isUserScrolling = true;
+        clearInterval(interval);
+    });
+
+    bannerCarousel.addEventListener("mouseleave", () => {
+        isUserScrolling = false;
+        interval = setInterval(autoScroll, 4000);
+    });
+});
+document.addEventListener("DOMContentLoaded", function () {
+    const track = document.getElementById("carousel-track");
+    const slides = document.querySelectorAll(".parallax-slide .parallax-bg");
+
+    function applyParallax() {
+        slides.forEach((slide, index) => {
+            let offset = track.scrollLeft / track.clientWidth - index;
+            slide.style.transform = `translateY(${offset * 20}px)`;
+        });
+    }
+
+    track.addEventListener("scroll", applyParallax);
+});
+document.addEventListener("DOMContentLoaded", function() {
+    gsap.from(".menu-item", {
+        opacity: 0,
+        y: 30,
+        stagger: 0.2, // Stagger effect for smooth item-by-item animation
+        duration: 0.8,
+        ease: "easeInOut"
+    });
+});
+
+function filterMenu(category) {
+    let items = document.querySelectorAll(".menu-item");
+    let menuTitle = document.getElementById("menuTitle");
+
+    items.forEach(item => {
+        let itemCategory = item.getAttribute("data-category");
+        if (category === "all" || itemCategory === category) {
+            item.style.display = "block";
+        } else {
+            item.style.display = "none";
+        }
+    });
+
+    menuTitle.innerText = category === "all" ? "All Menu Items" : `${category} Menu`;
+}
+AOS.init({
+    duration: 1000,  // Animation duration in milliseconds
+    easing: "ease-in-out",  // Smooth easing effect
+    once: true  // Run the animation only once
+});
+document.addEventListener("DOMContentLoaded", function () {
+    let items = document.querySelectorAll(".menu-item");
+    let index = 0;
+    const totalItems = items.length;
+    const itemsToShow = 4;
+
+    function showItems() {
+        // Hide all items
+        items.forEach(item => item.classList.remove("active"));
+        
+        // Show only 4 items at a time
+        for (let i = 0; i < itemsToShow; i++) {
+            let itemIndex = (index + i) % totalItems; // Loop through the items
+            items[itemIndex].classList.add("active");
+        }
+        
+        // Move to the next set of items after 3 seconds
+        index = (index + itemsToShow) % totalItems;
+    }
+
+    // Show initial items
+    showItems();
+
+    // Change items every 3 seconds
+    setInterval(showItems, 5000);
+
+    function filterMenu(category) {
+        let items = document.querySelectorAll(".menu-item");
+        let menuTitle = document.getElementById("menuTitle");
+    
+        items.forEach(item => {
+            let itemCategory = item.getAttribute("data-category");
+            if (category === "all" || itemCategory === category) {
+                item.classList.add("active");
+                item.style.display = "block";
+            } else {
+                item.classList.remove("active");
+                item.style.display = "none";
+            }
+        });
+    
+        // Update the menu title based on the selected category
+        menuTitle.innerText = category === "all" ? "All Menu Items" : `${category} Menu`;
+    }
+});
+ document.addEventListener("DOMContentLoaded", function () {
+        const carousel = document.getElementById("carousel-inner");
+        const banners = document.querySelectorAll(".parallax-banner");
+
+        carousel.addEventListener("scroll", () => {
+            let scrollLeft = carousel.scrollLeft;
+            
+            banners.forEach((banner, index) => {
+                let speed = (index + 1) * 0.2; // Different speeds for layers
+                banner.style.transform = `translateX(${scrollLeft * speed * -0.5}px)`;
+            });
+        });
+    });
+</script>
+<script src="{% static 'js/script.js' %}"></script>
+
+{% endblock %}

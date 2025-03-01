@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #00bfa5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-wrap: wrap;
+            background: linear-gradient(135deg, #00bfa5, #00e5ff);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Left Side - Responsive Image */
+        .left-side {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            padding: 40px;
+            position: relative;
+        }
+
+        .left-side img {
+            width: 100%;
+            height: auto;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .left-side h2 {
+            font-size: 2rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        /* Right Side - Form */
+        .right-side {
+            width: 50%;
+            background: white;
+            padding: 40px;
+        }
+
+        .right-side h2 {
+            font-size: 2rem;
+            color: #00bfa5;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .btn-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background-color: #00bfa5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn:hover {
+            background-color: #00e5ff;
+        }
+
+        .btn.cancel {
+            background-color: #ff3b3b;
+        }
+
+        .btn.cancel:hover {
+            background-color: #ff5e5e;
+        }
+        .image-banner {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            background: rgba(126, 107, 106, 0.9);
+            color: rgb(252, 249, 249);
+            padding: 15px;
+            text-align: center;
+        }
+
+        .image-banner h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.4rem;
+        }
+
+       
+        
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .left-side {
+                width: 100%;
+                height: auto;
+                padding: 20px;
+            }
+
+            .right-side {
+                width: 100%;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .left-side img {
+                max-height: 200px;
+            }
+
+            .right-side h2 {
+                font-size: 1.8rem;
+            }
+
+            .btn-container {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .btn {
+                width: 100%;
+                min-width: unset;
+            }
+        }
+
+        /* Hide the image on very small screens */
+        @media (max-width: 480px) {
+            .left-side img {
+                display: none;
+            }
+
+            .left-side h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+            <!-- Left Side with Image and Banner -->
+            <div class="left-side">
+                <img src="https://www.licious.in/blog/wp-content/uploads/2022/04/shutterstock_460012054-1-min.jpg" alt="Delicious Food">
+                <div class="image-banner">
+                    <h3>Daily Offers! 🎉</h3>
+                    <p>Get 30% off on your first order</p>
+                    <button class="offer-button">View Offers</button>
+                </div>
+            </div>
+
+        <!-- Right Side -->
+        <div class="right-side">
+            <h2>Login</h2>
+            <form action="{% url 'login' %}" method="post">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter Username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter Password" required>
+                </div>
+
+                <div class="btn-container">
+                    <button type="submit" class="btn">Login</button>
+                    <button type="button" class="btn cancel">Cancel</button>
+                </div>
+            </form>
+
+            <p style="text-align: center; margin-top: 10px;">Don't have an account? <a href="{% url 'register' %}" style="color: #00bfa5;">Register here</a></p>
+        </div>
+    </div>
+</body>
+</html>

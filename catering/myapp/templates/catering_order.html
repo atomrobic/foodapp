@@ -1,0 +1,57 @@
+{% extends "base/base.html" %}
+
+{% block title %}Place Catering Order{% endblock %}
+
+{% block content %}
+    <div class="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg mt-6">
+        <h2 class="text-2xl font-semibold text-green-700 text-center mb-6">Kerala Catering Order</h2>
+        
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label for="event_type" class="block font-medium text-gray-700 mb-1">Event Type:</label>
+                {{ form.event_type }}
+            </div>
+
+            <div>
+                <label for="event_date" class="block font-medium text-gray-700 mb-1">Event Date:</label>
+                {{ form.event_date }}
+            </div>
+
+            <div>
+                <label for="quantity" class="block font-medium text-gray-700 mb-1">Number of Guests:</label>
+                {{ form.quantity }}
+            </div>
+
+            <div>
+                <label for="menu_items" class="block font-medium text-gray-700 mb-2">Select Kerala Special Dishes:</label>
+                <div class="grid grid-cols-2 gap-2">
+                    {% for choice in form.menu_items %}
+                        <label class="flex items-center space-x-2 bg-gray-100 p-2 rounded-md hover:bg-gray-200 cursor-pointer">
+                            {{ choice.tag }}
+                            <span class="text-gray-700">{{ choice.choice_label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div>
+                <label for="address" class="block font-medium text-gray-700 mb-1">Event Address:</label>
+                {{ form.address }}
+            </div>
+
+            <div>
+                <label for="special_requests" class="block font-medium text-gray-700 mb-1">Special Requests:</label>
+                <textarea id="special_requests" name="special_requests" rows="4"
+                          class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-green-500"
+                          placeholder="E.g., Less spicy, No beef, More coconut flavor..."></textarea>
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition">
+                Submit Order
+            </button>
+        </form>
+    </div>
+{% endblock %}
