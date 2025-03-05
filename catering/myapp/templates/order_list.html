@@ -1,189 +1,129 @@
-{% extends "base/admin_base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
 
-{% block title %}Orders{% endblock %}
-
-{% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4>Orders</h4>
-                <div>
-                    <button class="btn btn-primary" onclick="filterOrders('all')">All</button>
-                    <button class="btn btn-success" onclick="filterOrders('catering')">Catering Orders</button>
-                    <button class="btn btn-warning" onclick="filterOrders('cart')">Cart Orders</button>
-                </div>
-            </div>
-            
-            <div class="card shadow-lg mb-4 order-section" id="catering-orders">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Catering Orders</h4>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped table-bordered">
-                        <thead class="bg-primary text-white">
-                            <tr>
-                                <th>Customer</th>
-                                <th>Event Type</th>
-                                <th>Event Date</th>
-                                <th>Total Price</th>
-                                <th>Address</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in orders %}
-                                {% if order.order_category == "catering" %}
-                                <tr>
-                                    <td>{{ order.customer.username }}</td>
-                                    <td>{{ order.event_type|default:"N/A" }}</td>
-                                    <td>{{ order.event_date|default:"N/A" }}</td>
-                                    <td>${{ order.total_price|default:"0.00" }}</td>
-                                    <td>{{ order.address|default:"No Address Provided" }}</td>
-                                    <td>
-                                        <form method="POST" action="{% url 'update_order_status' order.id %}">
-                                            {% csrf_token %}
-                                            <select name="status" class="form-select" onchange="this.form.submit()">
-                                                <option value="Pending" {% if order.status == "Pending" %}selected{% endif %}>Pending</option>
-                                                <option value="Processing" {% if order.status == "Processing" %}selected{% endif %}>Processing</option>
-                                                <option value="Completed" {% if order.status == "Completed" %}selected{% endif %}>Completed</option>
-                                                <option value="Cancelled" {% if order.status == "Cancelled" %}selected{% endif %}>Cancelled</option>
-                                            </select>
-                                        </form>
-                                    </td>
-                                    <td>
-   
-                                        <a href="{% url 'update_order_status' order.id %}" class="btn btn-primary btn-sm rounded-pill">Edit</a>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#orderModal{{ order.id }}">
-                                            View Details
-                                        </button>
-                                    </td>
-                                    
-                                </tr>
-                                {% endif %}
-                            {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center py-4">No catering orders found</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card shadow-lg order-section" id="cart-orders">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">Cart Orders</h4>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped table-bordered">
-                        <thead class="bg-success text-white">
-                            <tr>
-                                <th>Customer</th>
-                                <th>Quantity</th>
-                                <th>Total Price</th>
-                                <th>Address</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                           
-                            {% for order in orders %}
-                                {% if order.order_category == "cart" %}
-                                <tr>
-                                    <td>{{ order.customer.username }}</td>
-                                    <td>
-                                        <ul>
-                                            {% for item in order.order_items.all %}
-                                                <li>{{ item.quantity }}</li>
-                                            {% empty %}
-                                                <li>-</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </td>                                    <td>${{ order.total_price|default:"0.00" }}</td>
-                                    <td>{{ order.delivery_address.address|default:"No Address Provided" }}</td>
-                                    <td>
-                                        <form method="POST" action="{% url 'update_order_status' order.id %}">
-                                            {% csrf_token %}
-                                            <select name="status" class="form-select" onchange="this.form.submit()">
-                                                <option value="Pending" {% if order.status == "Pending" %}selected{% endif %}>Pending</option>
-                                                <option value="Processing" {% if order.status == "Processing" %}selected{% endif %}>Processing</option>
-                                                <option value="Completed" {% if order.status == "Completed" %}selected{% endif %}>Completed</option>
-                                                <option value="Cancelled" {% if order.status == "Cancelled" %}selected{% endif %}>Cancelled</option>
-                                            </select>
-                                        </form>
-                                    </td>
-                                    <td>
-                                        <a href="{% url 'update_order_status' order.id %}" class="btn btn-primary btn-sm rounded-pill">Edit</a>
-                                    </td>
-                                    
-                                </tr>
-                                {% endif %}
-                            {% empty %}
-                            <tr>
-                                <td colspan="6" class="text-center py-4">No cart orders found</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+<!-- Cart Orders Section -->
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
+        <div class="bg-green-600 text-white text-lg font-semibold p-4 text-center">
+            Cart Orders
         </div>
-    </div>
-</div>
-{% for order in orders %}
-<div class="modal fade" id="orderModal{{ order.id }}" tabindex="-1" aria-labelledby="orderModalLabel{{ order.id }}" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="orderModalLabel{{ order.id }}">Order Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p><strong>Customer:</strong> {{ order.customer.username }}</p>
-                <p><strong>Name:</strong> {{ order.name }}</p>
-                <p><strong>Event Type:</strong> {{ order.get_event_type_display }}</p>
-                <p><strong>Event Date:</strong> {{ order.event_date }}</p>
-                
-                <p><strong>Photo:</strong></p>
-                {% if order.photo %}
-                    <img src="{{ order.photo.url }}" class="img-fluid" style="max-height: 200px;">
-                {% else %}
-                    <p>No photo uploaded</p>
-                {% endif %}
-
-                <p><strong>Quantity:</strong> {{ order.quantity }}</p>
-                <p><strong>Menu Items:</strong></p>
-                <ul>
-                    {% for item in order.menu_items.all %}
-                        <li>{{ item.name }} - ${{ item.price }}</li>
+        <div class="p-4 overflow-x-auto">
+            <table class="w-full table-auto border-collapse border border-gray-200">
+                <thead class="bg-green-500 text-white">
+                    <tr>
+                        <th class="border border-gray-300 px-4 py-2">Customer</th>
+                        <th class="border border-gray-300 px-4 py-2">Quantity</th>
+                        <th class="border border-gray-300 px-4 py-2">Total Price</th>
+                        <th class="border border-gray-300 px-4 py-2">Address</th>
+                        <th class="border border-gray-300 px-4 py-2">Status</th>
+                        <th class="border border-gray-300 px-4 py-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white">
+                    {% for order in orders %}
+                        {% if order.order_category == "cart" %}
+                        <tr class="hover:bg-gray-100 transition">
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                {{ order.delivery_address.full_name|default:"No Name Provided" }}
+                            </td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                {{ order.total_quantity|default:"0" }}
+                            </td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                ${{ order.total_price|default:"0.00" }}
+                            </td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                {{ order.delivery_address.address|default:"No Address Provided" }}
+                            </td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                <form method="POST" action="{% url 'update_order_status' order.id %}">
+                                    {% csrf_token %}
+                                    <select name="status" class="w-full p-2 border rounded-md focus:ring focus:ring-green-300" onchange="this.form.submit()">
+                                        <option value="Pending" {% if order.status == "Pending" %}selected{% endif %}>Pending</option>
+                                        <option value="Processing" {% if order.status == "Processing" %}selected{% endif %}>Processing</option>
+                                        <option value="Completed" {% if order.status == "Completed" %}selected{% endif %}>Completed</option>
+                                        <option value="Cancelled" {% if order.status == "Cancelled" %}selected{% endif %}>Cancelled</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                <button class="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-700 transition">
+                                    Update
+                                </button>
+                            </td>
+                        </tr>
+                        {% endif %}
                     {% empty %}
-                        <li>No items</li>
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-gray-500">No cart orders found</td>
+                    </tr>
                     {% endfor %}
-                </ul>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-                <p><strong>Address:</strong> {{ order.address }}</p>
-                <p><strong>Special Requests:</strong> {{ order.special_requests|default:"None" }}</p>
-                <p><strong>Status:</strong> {{ order.get_status_display }}</p>
-                <p><strong>Total Price:</strong> ${{ order.total_price|default:"0.00" }}</p>
-                <p><strong>Created At:</strong> {{ order.created_at }}</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
+    <!-- Catering Orders Section -->
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="bg-blue-600 text-white text-lg font-semibold p-4 text-center">
+            Catering Orders
+        </div>
+        <div class="p-4 overflow-x-auto">
+            <table class="w-full table-auto border-collapse border border-gray-200">
+                <thead class="bg-blue-500 text-white">
+                    <tr>
+                        <th class="border border-gray-300 px-4 py-2">Customer</th>
+                        <th class="border border-gray-300 px-4 py-2">Event Date</th>
+                        <th class="border border-gray-300 px-4 py-2">Total Price</th>
+                        <th class="border border-gray-300 px-4 py-2">Status</th>
+                        <th class="border border-gray-300 px-4 py-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white">
+                    {% for order in orders %}
+                        {% if order.order_category == "catering" %}
+                        <tr class="hover:bg-gray-100 transition">
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                {{ order.customer_name }}
+                            </td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                {{ order.event_date|date:"Y-m-d" }}
+                            </td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                ${{ order.total_price|default:"0.00" }}
+                            </td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                <form method="POST" action="{% url 'update_order_status' order.id %}">
+                                    {% csrf_token %}
+                                    <select name="status" class="w-full p-2 border rounded-md focus:ring focus:ring-blue-300" onchange="this.form.submit()">
+                                        <option value="Pending" {% if order.status == "Pending" %}selected{% endif %}>Pending</option>
+                                        <option value="Processing" {% if order.status == "Processing" %}selected{% endif %}>Processing</option>
+                                        <option value="Completed" {% if order.status == "Completed" %}selected{% endif %}>Completed</option>
+                                        <option value="Cancelled" {% if order.status == "Cancelled" %}selected{% endif %}>Cancelled</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                <button class="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition">
+                                    Update
+                                </button>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-gray-500">No catering orders found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
-{% endfor %}
 
-<script>
-    function filterOrders(category) {
-        document.getElementById('catering-orders').style.display = (category === 'all' || category === 'catering') ? 'block' : 'none';
-        document.getElementById('cart-orders').style.display = (category === 'all' || category === 'cart') ? 'block' : 'none';
-    }
-</script>
-{% endblock %}
+</body>
+</html>

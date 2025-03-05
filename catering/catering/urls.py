@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path
-from myapp.views import register,checkout,menu_view,menu_item_detail,menu_views,menu_items_detail,dashboard_view,get_pending_orders, user_dashboard,order_success,update_order_status,user_login,update_quantity,remove_item, user_logout, user_profile, update_profile,catering_home,place_catering_order,order_list,add_menu_item,delete_menu_item,add_category,edit_menu_item,menu_report,add_to_cart,view_cart
+from myapp.views import register,delete_address,customer_detail,category_detail,checkout,save_address,profile_view,menu_view,menu_item_detail,menu_views,menu_items_detail,dashboard_view,get_pending_orders, user_dashboard,order_success,update_order_status,user_login,update_quantity,remove_item, user_logout, update_profile,catering_home,place_catering_order,order_list,add_menu_item,delete_menu_item,add_category,edit_menu_item,menu_report,add_to_cart,view_cart
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -9,11 +9,11 @@ urlpatterns = [
     path("register/", register, name="register"),
     path("login/", user_login, name="login"),
     path("logout/", user_logout, name="logout"),
-    path("profile/", user_profile, name="profile"),
+    # path("profile/", user_profile, name="profile"),
     path("profile/update/", update_profile, name="update_profile"),
     path("place-order/", place_catering_order, name="place_catering_order"),
      path("adminorders/", order_list, name="admin_catering_orders"),
-     path('update-order-status/<int:order_id>/', update_order_status, name='update_order_status'),
+path('update-order-status/<int:order_id>/', update_order_status, name='update_order_status'),
     path('admindashboard/', dashboard_view, name='dashboard'),
 
     path('', add_menu_item, name='add_menu_item'),
@@ -23,7 +23,8 @@ urlpatterns = [
     path("menu-report/", menu_report, name="menu_report"),
     path('menu/item/<int:item_id>/', menu_items_detail, name='menu_item_details'),
 
-    
+        path('category/<int:category_id>/', category_detail, name='category_detail'),
+
 
     path("home/", catering_home, name="catering_home"),
     path('menuitem/<int:item_id>/', menu_item_detail, name='menu_item_detail'),
@@ -36,12 +37,14 @@ path("cart/add/<int:item_id>/", add_to_cart, name="add_to_cart"),
        path("checkout/", checkout, name="checkout"),
      path("order-success/<int:order_id>/", order_success, name="order_success"),  # ✅ This must match the view
        path("get_pending_orders/", get_pending_orders, name="get_pending_orders"),
-    path('dashboard/', user_dashboard, name='user_dashboard'),
+    path('user_profile/',profile_view, name='user_dashboard'),
 
     path('menu/', menu_views, name='menu'),
-
-
-
+    path("save_address/", save_address, name="save_address"),
+path('address/<int:pk>/delete/', delete_address, name='delete_address'),
+    path("customers/", customer_detail, name="customer_list"),
 ]
+
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,5 +1,5 @@
 from django import forms
-from myapp.models import CateringOrder, MenuItem,Category,FoodName
+from myapp.models import CateringOrder, MenuItem,Category,FoodName,DeliveryAddress
 
 class CateringOrderForm(forms.ModelForm):
     menu_items = forms.ModelMultipleChoiceField(
@@ -67,3 +67,9 @@ class CombinedMenuFoodForm(forms.ModelForm):
             self.instance.name = food_name_obj  # Assign it to the MenuItem
         
         return super().save(commit)
+    
+    
+class AddressForm(forms.ModelForm):
+    class Meta:
+        model = DeliveryAddress
+        fields = ["full_name", "address", "city", "zipcode", "country"]

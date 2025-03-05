@@ -1,52 +1,198 @@
+<!-- Profile Page -->
 {% extends "base/base.html" %}
+{% block title %}{{ user.username }} - Profile Page{% endblock %}
 
 {% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row md:justify-between -mx-4">
+        <!-- Left Column (Profile Section) -->
+        <div class="w-full md:w-1/3 px-4 mb-4 md:mb-0">
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <i class="fas fa-user-circle text-6xl text-gray-500 mb-4"></i>
+                <h1 class="text-lg font-bold mb-2">{{ user.username }}</h1>
+                <h1 class="text-lg font-bold mb-2">{{ user.email }}</h1>
 
-{% load static %}
-
-<div class="container mx-auto p-6">
-    <!-- Dashboard Layout -->
-    <div class="flex flex-wrap lg:flex-nowrap gap-6">
-        <!-- Sidebar -->
-        <aside class="w-full lg:w-1/4 bg-gray-100 p-4 rounded-lg shadow-md">
-            <h2 class="text-lg font-semibold text-gray-800">User Dashboard</h2>
-            <ul class="mt-4 space-y-2">
-                <li><a href="" class="block px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white">Profile</a></li>
-                <li><a href="" class="block px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white">Order History</a></li>
-                <li><a href="" class="block px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white">Saved Items</a></li>
-                <li><a href="" class="block px-4 py-2 bg-red-500 text-white rounded-lg text-center hover:bg-red-600">Logout</a></li>
-            </ul>
-        </aside>
-
-        <!-- Main Dashboard Content -->
-        <main class="w-full lg:w-3/4 bg-white p-6 rounded-lg shadow-md">
-            <div class="flex items-center gap-4">
-                <img src="{{ user.profile.image.url }}" alt="Profile Picture" class="w-16 h-16 rounded-full">
-                <div>
-                    <h2 class="text-xl font-semibold">{{ user.username }}</h2>
-                    <p class="text-gray-600">{{ user.email }}</p>
-                </div>
+                <p class="text-gray-600 mb-4">Food Enthusiast</p>
+                <p class="text-sm text-gray-500 mb-4">Exploring new flavors one bite at a time 🍴</p>
             </div>
+        </div>
 
-            <!-- Recent Orders -->
-            <section class="mt-6">
-                <h3 class="text-lg font-semibold text-gray-800">Recent Orders</h3>
-                {% if orders %}
-                    <div class="mt-4 space-y-4">
-                        {% for order in orders %}
-                        <div class="p-4 border rounded-lg shadow-sm">
-                            <p class="font-semibold">{{ order.item_name }}</p>
-                            <p class="text-sm text-gray-600">Ordered on: {{ order.order_date }}</p>
-                            <p class="text-sm text-green-600">Status: {{ order.status }}</p>
-                        </div>
-                        {% endfor %}
+       
+
+
+
+        <!-- Right Column -->
+<div class="w-full md:w-2/3 px-4" x-data="{ 
+    showForm: false, 
+    editIndex: null, 
+    newAddress: { 
+        id: '', 
+        full_name: '', 
+        address: '', 
+        country: '', 
+        city: '', 
+        zipcode: '', 
+        phone: '' 
+    }, 
+    addressCount: {{ addresses|length }} 
+}">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold mb-4">Address Book</h2>
+
+        {% if addresses %}
+            {% for address in addresses %}
+                <div class="border rounded-lg p-4 bg-gray-50 mb-2 relative">
+    
+                    <div class="border rounded-lg p-4 bg-gray-50 mb-2">
+                        <h3 class="font-semibold">{{ address.full_name }}</h3>
+                        <p class="text-gray-600 text-sm">
+                            {{ address.address }}, {{ address.city }}, {{ address.zipcode }}<br>
+                            Phone: {{ address.phone }}
+                        </p>
                     </div>
-                {% else %}
-                    <p class="text-gray-600 mt-2">No recent orders.</p>
-                {% endif %}
-            </section>
-        </main>
+                    <div class="absolute top-2 right-2 space-x-2">
+                        <!-- Edit Button -->
+                        <button 
+                            @click="
+                                showForm = true;
+                                editIndex = '{{ address.id }}';
+                                newAddress = {
+                                    id: '{{ address.id }}',
+                                    full_name: '{{ address.full_name|escapejs }}',
+                                    address: '{{ address.address|escapejs }}',
+                                    country: '{{ address.country|escapejs }}',
+                                    city: '{{ address.city|escapejs }}',
+                                    zipcode: '{{ address.zipcode|escapejs }}',
+                                    phone: '{{ address.phone|escapejs }}'
+                                }" 
+                            class="text-blue-500 hover:text-blue-700 transition-colors duration-200" 
+                            title="Edit">
+                            <i class="fas fa-edit text-lg"></i>
+                        </button>
+                    
+                        <!-- Delete Button -->
+                        <form action="{% url 'delete_address' address.id %}" method="post" class="inline">
+                            {% csrf_token %}
+                            <button 
+                                type="submit" 
+                                class="text-red-500 hover:text-red-700 transition-colors duration-200" 
+                                onclick="return confirm('Are you sure you want to delete this address?');" 
+                                title="Delete">
+                                <i class="fas fa-trash text-lg"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No saved addresses.</p>
+        {% endif %}
+
+        <!-- Maximum Address Message -->
+        <p class="text-red-500 mt-4" {% if addresses|length < 2 %}hidden{% endif %}>
+            You can only save up to two addresses.
+        </p>
+
+        <!-- Add New Address Button -->
+        <button @click="if (addressCount < 2) { showForm = true; editIndex = null; newAddress = { id: '', full_name: '', address: '', country: '', city: '', zipcode: '', phone: '' }; }"
+                class="mt-4 text-red-500 font-semibold text-sm">+ Add New Address</button>
+
+        <!-- Address Form (Edit/Create) -->
+        <div x-show="showForm" class="mt-4 p-4 border rounded-lg bg-white shadow-lg">
+            <h3 class="font-semibold mb-2" x-text="editIndex ? 'Edit Address' : 'Add New Address'"></h3>
+            <form id="addressFormProfile" method="POST" action="{% url 'save_address' %}">
+                {% csrf_token %}
+                <input type="hidden" name="id" id="profile_address_id"> <!-- Hidden field for edit -->
+                <input type="hidden" name="next" value="profile">  <!-- Redirects back to Profile -->
+            
+                <input type="text" name="full_name" placeholder="Full Name" required class="border p-2 w-full mb-2">
+                <input type="text" name="address" placeholder="Address" required class="border p-2 w-full mb-2">
+                <input type="text" name="city" placeholder="City" required class="border p-2 w-full mb-2">
+                <input type="text" name="country" placeholder="Country" required class="border p-2 w-full mb-2">
+                <input type="text" name="zipcode" placeholder="Zip Code" required class="border p-2 w-full mb-2">
+                <input type="text" name="phone" placeholder="Phone Number" required class="border p-2 w-full mb-2">
+                
+                <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Save Address</button>
+            </form>
+            
+        </div>
+
+        <!-- Recent Orders Section -->
+        <!-- ... existing recent orders code ... -->
     </div>
+
+             <!-- Recent Orders Section -->
+<div class="mt-6">
+    <h2 class="text-xl font-bold mb-4">Recent Orders</h2>
+    {% for order in recent_orders %}
+    <div class="border-2 border-green-500 rounded-lg p-4 mb-2">
+        <div class="flex justify-between">
+            <span class="text-sm font-semibold">#{{ order.id }}</span>
+            <span class="text-sm text-green-500 bg-green-100 px-2 py-1 rounded">{{ order.status }}</span>
+        </div>
+        <ul class="list-disc pl-4 space-y-1">
+            {% for item in order.order_items.all %}
+            <li>{{ item.menu_item.name }} × {{ item.quantity }} - ${{ item.price }}</li>
+            {% endfor %}
+        </ul>
+        <p class="text-gray-600 text-sm">Total: ${{ order.total_price }}</p>
+    </div>
+    {% empty %}
+    <p>No recent orders available.</p>
+    {% endfor %}
 </div>
 
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll("form").forEach(form => {
+            form.addEventListener("submit", function(event) {
+                event.preventDefault();  // Prevent full-page reload
+    
+                let formData = new FormData(this);
+                let nextPage = formData.get("next");  // Get whether it's 'profile' or 'cart'
+    
+                fetch("{% url 'save_address' %}", {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Address saved successfully!");
+    
+                        // Get the appropriate address list section
+                        let addressContainer = document.getElementById(nextPage + "AddressList");
+                        let newAddress = `
+                            <div class="p-4 border rounded-lg mb-2">
+                                <p><strong>${data.address.full_name}</strong></p>
+                                <p>${data.address.address}, ${data.address.city}, ${data.address.zipcode}</p>
+                                <p>Phone: ${data.address.phone}</p>
+                            </div>`;
+    
+                        addressContainer.innerHTML += newAddress;
+                    } else {
+                        alert("Error saving address!");
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            });
+        });
+    });
+    </script>
+    
 {% endblock %}
+
+
+
+
+
+
+
+

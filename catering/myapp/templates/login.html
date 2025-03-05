@@ -128,6 +128,7 @@
         .btn.cancel:hover {
             background-color: #ff5e5e;
         }
+
         .image-banner {
             position: absolute;
             bottom: 20px;
@@ -143,9 +144,6 @@
             margin: 0 0 10px 0;
             font-size: 1.4rem;
         }
-
-       
-        
 
         /* Responsive Design */
         @media (max-width: 1024px) {
@@ -200,19 +198,33 @@
                 font-size: 1.5rem;
             }
         }
+
+        /* Messages Styling */
+        .messages {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .messages .success {
+            color: green;
+        }
+
+        .messages .error {
+            color: red;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-            <!-- Left Side with Image and Banner -->
-            <div class="left-side">
-                <img src="https://www.licious.in/blog/wp-content/uploads/2022/04/shutterstock_460012054-1-min.jpg" alt="Delicious Food">
-                <div class="image-banner">
-                    <h3>Daily Offers! 🎉</h3>
-                    <p>Get 30% off on your first order</p>
-                    <button class="offer-button">View Offers</button>
-                </div>
+        <!-- Left Side with Image and Banner -->
+        <div class="left-side">
+            <img src="https://www.licious.in/blog/wp-content/uploads/2022/04/shutterstock_460012054-1-min.jpg" alt="Delicious Food">
+            <div class="image-banner">
+                <h3>Daily Offers! 🎉</h3>
+                <p>Get 30% off on your first order</p>
+                <button class="offer-button">View Offers</button>
             </div>
+        </div>
 
         <!-- Right Side -->
         <div class="right-side">
@@ -236,8 +248,25 @@
                 </div>
             </form>
 
+            <div class="messages">
+                {% if messages %}
+                    <ul>
+                        {% for message in messages %}
+                            <li class="{{ message.tags }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
             <p style="text-align: center; margin-top: 10px;">Don't have an account? <a href="{% url 'register' %}" style="color: #00bfa5;">Register here</a></p>
         </div>
     </div>
+
+    <script>
+        // Optional: Add JavaScript to handle any additional behavior
+        document.querySelector('.btn.cancel').addEventListener('click', function() {
+            window.location.href = '{% url 'catering_home' %}';
+        });
+    </script>
 </body>
 </html>

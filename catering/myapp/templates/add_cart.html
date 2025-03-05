@@ -1,144 +1,191 @@
-
 {% extends 'base/base.html' %}
-{% load static %}
 
-{% block title %}Your Cart{% endblock %}
 {% block content %}
-
-<div class="container mx-auto px-4 py-6">
-    <h1 class="text-3xl font-bold text-center mb-6">Your Cart</h1>
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-6">Your Cart</h1>
 
     {% if cart_items %}
-    <div class="flex flex-col md:flex-row gap-6">
-        <!-- Cart Items -->
-        <div class="w-full md:w-3/4 bg-white p-6 rounded-lg shadow-lg">
-            {% for item in cart_items %}
-            <div class="flex items-center mb-4 border-b pb-4">
-                <div class="w-24 h-24 mr-4">
-                    <img src="{{ item.menu_item.image.url }}" alt="{{ item.menu_item.name }}" class="w-full h-full object-cover rounded-lg">
-                </div>
-                <div class="flex-grow">
+        {% for item in cart_items %}
+        <div class="cart-item grid grid-cols-4 items-center mb-4 border-b pb-4 gap-4">
+            <!-- Product Image & Name -->
+            <div class="col-span-1 flex items-center">
+                <img src="{{ item.menu_item.image.url }}" alt="{{ item.menu_item.name }}" class="w-24 h-24 object-cover rounded-lg">
+                <div class="ml-4">
                     <h2 class="text-lg font-semibold">{{ item.menu_item.name }}</h2>
-                    <p class="text-lg font-bold">${{ item.menu_item.price }}</p>
-                </div>
-
-                <!-- Quantity Update Form -->
-                <div class="ml-4">
-                    <form action="{% url 'update_quantity' item.id %}" method="post">
-                        {% csrf_token %}
-                        <button type="submit" name="quantity" value="{{ item.quantity|add:-1 }}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded-lg">-</button>
-                        <span class="mx-2">{{ item.quantity }}</span>
-                        <button type="submit" name="quantity" value="{{ item.quantity|add:1 }}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded-lg">+</button>
-                    </form>
-                </div>
-
-                <!-- Remove Item Button -->
-                <div class="ml-4">
-                    <form action="{% url 'remove_item' item.id %}" method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded-lg">
-                            ❌
-                        </button>
-                    </form>
+                    <p class="text-gray-600">Ref: {{ item.id }}</p>
                 </div>
             </div>
+
+            <!-- Quantity Selector -->
+            <div class="col-span-1 flex justify-center">
+                <form action="{% url 'update_quantity' item.id %}" method="post" class="flex items-center">
+                    {% csrf_token %}
+                    <input type="hidden" name="quantity" id="quantity-{{ item.id }}" value="{{ item.quantity }}">
+                    
+                    <button type="button" onclick="updateQuantity({{ item.id }}, -1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-1 px-2 rounded-l">-</button>
+                    <span class="px-2" id="quantity-display-{{ item.id }}">{{ item.quantity }}</span>
+                    <button type="button" onclick="updateQuantity({{ item.id }}, 1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-1 px-2 rounded-r">+</button>
+
+                    <button type="submit" class="hidden" id="submit-{{ item.id }}"></button>
+                </form>
+            </div>
+
+            <!-- Price Details -->
+            <div class="col-span-1 text-center">
+                <p>£{{ item.menu_item.price }}</p>
+                <p class="font-bold">Total: £{{ item.total_price }}</p>
+            </div>
+
+            <!-- Remove Button -->
+            <div class="col-span-1 text-right">
+                <form action="{% url 'remove_item' item.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">Remove</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Order Summary & Address Selection -->
+        <div class="mt-6 grid md:grid-cols-2 gap-4">
+            
+            <!-- Order Summary -->
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-bold mb-4">Order Summary</h2>
+                <p class="flex justify-between"><span>Subtotal:</span> <span>£{{ subtotal }}</span></p>
+                <p class="flex justify-between"><span>Delivery:</span> <span>£0.00</span></p>
+                <p class="flex justify-between font-bold"><span>Total:</span> <span>£{{ total }}</span></p>
+            </div>
+
+           <!-- Address Selection -->
+<div class="bg-white p-6 rounded-lg shadow-lg">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Select Delivery Address</h2>
+        <!-- "Add New Address" Button -->
+        <button onclick="toggleAddressForm()" class="bg-blue-500 text-white px-4 py-2 rounded">
+            + Add New Address
+        </button>
+    </div>
+
+    <form method="POST" action="{% url 'checkout' %}">
+        {% csrf_token %}
+        <div class="grid gap-4 md:grid-cols-2">
+            {% for address in addresses %}
+                <label class="border rounded-lg p-4 bg-gray-50 flex items-center cursor-pointer">
+                    <input type="radio" name="selected_address" value="{{ address.id }}" class="mr-3" {% if forloop.first %}checked{% endif %}>
+                    <div>
+                        <p class="font-semibold">{{ address.full_name }}</p>
+                        <p class="text-gray-600">{{ address.address }}, {{ address.city }}, {{ address.zipcode }}</p>
+                        <p class="text-gray-600">Phone: {{ address.phone }}</p>
+                    </div>
+                </label>
+            {% empty %}
+                <p class="text-gray-600">No addresses found. Add a new address below.</p>
             {% endfor %}
         </div>
 
-        <!-- Summary Section -->
-        <div class="w-full md:w-1/4 bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-bold mb-4">Order Summary</h2>
-            <div class="mb-4">
-                <p class="text-gray-600">Subtotal:</p>
-                <p class="text-lg font-bold">${{ subtotal }}</p>
-            </div>
-            <div class="mb-4">
-                <p class="text-gray-600">Tax:</p>
-                <p class="text-lg font-bold">${{ tax }}</p>
-            </div>
-            <div class="mb-4">
-                <p class="text-gray-600">Total:</p>
-                <p class="text-2xl font-bold">${{ total }}</p>
-          <!-- Alpine.js Wrapper -->
-<div x-data="{ openModal: false }">
-    <!-- Proceed to Checkout Button -->
-    <button @click="openModal = true"
-        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
-        Proceed to Checkout
-    </button>
-
- 
-        <!-- Modal -->
-<div x-show="openModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-    <div class="bg-white w-96 p-6 rounded-lg shadow-lg relative">
-        <!-- Modal Header -->
-        <h2 class="text-xl font-bold text-gray-800 mb-4">Enter Shipping Address</h2>
-
-        <!-- Close Button -->
-        <button @click="openModal = false" class="absolute top-2 right-2 text-gray-600 hover:text-gray-900">
-            &times;
+        <button type="submit" class="mt-4 px-4 py-2 bg-green-500 text-white rounded-md w-full">
+            Proceed to Checkout
         </button>
-
-        <!-- Checkout Address Form -->
-        <form method="POST" action="{% url 'checkout' %}">
-            {% csrf_token %}
-            
-            <div class="mb-4">
-                <label class="block text-gray-700 font-semibold">Full Name</label>
-                <input type="text" name="full_name" required
-                    class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-gray-700 font-semibold">Address</label>
-                <textarea name="address" rows="3" required
-                    class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-gray-700 font-semibold">City</label>
-                <input type="text" name="city" required
-                    class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-gray-700 font-semibold">Zip Code</label>
-                <input type="text" name="zipcode" required
-                    class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-gray-700 font-semibold">Country</label>
-                <input type="text" name="country" required
-                    class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <!-- Submit Button -->
-            <button type="submit"
-                class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-                Confirm Order
-            </button>
-        </form>
-    </div>
+    </form>
 </div>
 
+<!-- Add New Address Form (Hidden by Default) -->
+<div id="new-address-form" class="hidden mt-6 bg-white p-6 rounded-lg shadow-lg">
+    <h2 class="text-xl font-bold mb-4">Add a New Address</h2>
+    <form id="addressFormCart" method="POST" action="{% url 'save_address' %}">
+        {% csrf_token %}
+        <input type="hidden" name="id" id="cart_address_id"> <!-- Hidden field for edit -->
+        <input type="hidden" name="next" value="cart">  <!-- Redirects back to Cart -->
+    
+        <input type="text" name="full_name" placeholder="Full Name" required class="border p-2 w-full mb-2">
+        <input type="text" name="address" placeholder="Address" required class="border p-2 w-full mb-2">
+        <input type="text" name="city" placeholder="City" required class="border p-2 w-full mb-2">
+        <input type="text" name="country" placeholder="Country" required class="border p-2 w-full mb-2">
+        <input type="text" name="zipcode" placeholder="Zip Code" required class="border p-2 w-full mb-2">
+        <input type="text" name="phone" placeholder="Phone Number" required class="border p-2 w-full mb-2">
+        
+        <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Save Address</button>
+    </form>
+    
+</div>
 
-<!-- Alpine.js -->
-<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
-    </div>
+<!-- JavaScript to Show/Hide Address Form -->
+<script>
+    function toggleAddressForm() {
+        let form = document.getElementById("new-address-form");
+        form.classList.toggle("hidden");  // Show or hide the form when button is clicked
+    }
+</script>
 
     {% else %}
-    <!-- Empty Cart Section -->
-    <div class="flex flex-col items-center justify-center text-center">
-<img src="{% static '/images/cart_empty.png' %}" alt="Empty Cart" class="w-64 h-64">
-        <h2 class="text-2xl font-bold mt-4">Your Cart is Empty</h2>
-        <p class="text-gray-600 mt-2">Looks like you haven't added anything to your cart yet.</p>
-        <a href="(% url 'catering_home' %)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg mt-4">
-            Browse Menu
-        </a>
-    </div>
+        <!-- Empty Cart Message -->
+        <div class="flex flex-col items-center">
+            <img src="https://img.freepik.com/free-vector/supermarket-shopping-cart-concept-illustration_114360-22408.jpg?t=st=1741067254~exp=1741070854~hmac=c985f48b129a76c3572908b2a20a1be42515bfe4451bd650adcf02c594eecfa2&w=1060" 
+                 alt="Empty Cart" class="w-32 h-32 mb-4">
+            <p class="text-gray-600">"Nothing to see here... yet! Add some goodies to your cart."</p>
+        </div>
     {% endif %}
 </div>
+
+<!-- JavaScript for Quantity Update -->
+<script>
+    function updateQuantity(itemId, change) {
+        let quantityInput = document.getElementById(`quantity-${itemId}`);
+        let quantityDisplay = document.getElementById(`quantity-display-${itemId}`);
+        let submitButton = document.getElementById(`submit-${itemId}`);
+
+        let currentQuantity = parseInt(quantityInput.value);
+        let newQuantity = currentQuantity + change;
+
+        if (newQuantity >= 1) {
+            quantityInput.value = newQuantity;
+            quantityDisplay.textContent = newQuantity;
+            submitButton.click();
+        }
+    }
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll("form").forEach(form => {
+                form.addEventListener("submit", function(event) {
+                    event.preventDefault();  // Prevent full-page reload
+        
+                    let formData = new FormData(this);
+                    let nextPage = formData.get("next");  // Get whether it's 'profile' or 'cart'
+        
+                    fetch("{% url 'save_address' %}", {
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("Address saved successfully!");
+        
+                            // Get the appropriate address list section
+                            let addressContainer = document.getElementById(nextPage + "AddressList");
+                            let newAddress = `
+                                <div class="p-4 border rounded-lg mb-2">
+                                    <p><strong>${data.address.full_name}</strong></p>
+                                    <p>${data.address.address}, ${data.address.city}, ${data.address.zipcode}</p>
+                                    <p>Phone: ${data.address.phone}</p>
+                                </div>`;
+        
+                            addressContainer.innerHTML += newAddress;
+                        } else {
+                            alert("Error saving address!");
+                        }
+                    })
+                    .catch(error => console.error("Error:", error));
+                });
+            });
+        });
+        </script>
+        
+</script>
 
 {% endblock %}

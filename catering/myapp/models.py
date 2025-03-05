@@ -27,9 +27,17 @@ class CustomUser(AbstractUser):
 class Customer(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="customer_profile")
     created_at = models.DateTimeField(auto_now_add=True)
+    phone = models.CharField(max_length=15, blank=True, null=True)  # Phone number
+    total_spent = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Track total spending
+
+    def update_total_spent(self):
+        """Recalculate and update total spending from related orders."""
+        total = self.orders.aggregate(total=models.Sum('total_price'))['total'] or 0
+        self.total_spent = total
+        self.save()
 
     def __str__(self):
-        return self.user.username
+        return f"{self.user.email} - {self.phone if self.phone else 'No Phone'} - ${self.total_spent}"
 
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -68,7 +76,9 @@ class DeliveryAddress(models.Model):
     city = models.CharField(max_length=100)
     zipcode = models.CharField(max_length=10)
     country = models.CharField(max_length=100)
-    
+    is_default = models.BooleanField(default=False)  
+    phone = models.CharField(max_length=15, blank=True, null=True)
+
 
     def __str__(self):
         return f"{self.full_name} - {self.address} - {self.zipcode}"  
@@ -87,8 +97,11 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
     total_price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
 
-    def __str__(self):
-        return f"Order {self.id} - {self.customer.username} ({self.status}) {self.delivery_address.address}"
+def get_delivery_address(self):
+    if self.customer and hasattr(self.customer, "address"):
+        return self.customer.address
+    return "No address available"
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_items")
@@ -96,9 +109,11 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=6, decimal_places=2)  # Make sure this field is present
 
+def get_customer_address(self):
+    if self.order and self.order.customer:  # Ensure both order and customer exist
+        return self.order.customer.address
+    return "No address available"  # Avoid NoneType error
 
-    def __str__(self):
-        return f"{self.quantity} x {self.menu_item.name} (Order {self.order.id}) "
 from django.db import models
 
 class Banner(models.Model):

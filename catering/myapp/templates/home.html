@@ -20,9 +20,10 @@
         transition: transform 0.3s ease-out;
     }
 </style>
+<body class="bg-cover bg-center bg-no-repeat" style="https://img.freepik.com/free-photo/stone-texture_1194-5537.jpg?t=st=1741065559~exp=1741069159~hmac=7b3598f890248c1e945dcd6803d0f28bfc4c74366f2cfc1ab43dead2e277a855&w=740');">
 
 <!-- Carousel Container -->
-<section id="banner-carousel" class="w-full max-w-6xl mx-auto overflow-hidden relative">
+<section id="banner-carousel" class="w-full max-w-8x2 mx-auto overflow-hidden relative">
     <div id="carousel-inner" class="flex snap-x snap-mandatory overflow-x-auto scrollbar-hide">
         {% for banner in banners %}
         <div class="w-full flex-shrink-0 snap-center relative parallax-banner">
@@ -78,12 +79,16 @@
             <p class="text-lg font-bold text-blue-600 mt-1">₹{{ item.price }}</p>
             
             <!-- Buttons (Initially Hidden) -->
+            <!-- Cart Message Container -->
             <div class="flex gap-2 mt-2 opacity-0 transition-opacity duration-300 absolute left-0 right-0 bottom-4 px-4 group-hover:opacity-100">
                 <form class="add-to-cart-form" data-id="{{ item.id }}">
                     {% csrf_token %}
-                    <button type="button" class="add-to-cart-btn bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-lg">
-                        Add to Cart
-                    </button>
+                   
+                        <button type="button" class="add-to-cart-btn bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-lg">
+                            Add to Cart
+                        </button>
+                        <!-- Message will be inserted here dynamically -->
+                    
                 </form>
                 <a href="{% url 'menu_item_detail' item.id %}" 
                    class="flex-1 text-center px-1 py-1 bg-gray-300 text-black rounded-md hover:bg-gray-500 hover:text-white transition duration-300">
@@ -141,65 +146,96 @@
 
 <!-- Full-Width Image -->
 <section class="w-full mt-5">
-    <img src="https://www.licious.in/blog/wp-content/uploads/2022/04/shutterstock_460012054-1-min.jpg" alt="Catering Banner" class="w-full h-40 object-cover">
+    <img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGs4czg5dm1sdjB2ZmEwdmptbW5tbjR3eGpoMTBvNjc0bmpnNTVvOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/XZbDoWKLdqnDwKhzXp/giphy.gif" 
+        alt="Catering Banner" 
+        class="w-full h-40 sm:h-48 md:h-56 lg:h-64 xl:h-72 object-cover rounded-lg shadow-md">
+</section>
+<!-- Categories Section -->
+<section class="py-8 bg-cover bg-center bg-no-repeat" style="background-image: url('https://img.freepik.com/free-vector/sketches-arabic-food-pattern_23-2147543047.jpg?t=st=1741064509~exp=1741068109~hmac=c10e473b0a2395eef0a115d0e1a1cc20690a574eb899acc909f41efb459d294d&w=1060');">
+    <div class="container mx-auto px-4 bg-white bg-opacity-90 p-6 rounded-lg shadow-lg">
+        <h2 class="text-3xl font-bold text-center text-green-600 mb-8">All Categories</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {% for category in categories %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden text-center p-4 transition-transform hover:scale-105">
+                    <!-- Category Image -->
+                    {% if category.image %}
+                        <img src="{{ category.image.url }}" alt="{{ category.name }}" class="w-24 h-24 mx-auto object-cover rounded-full">
+                    {% else %}
+                        <p class="text-gray-500">No Image Available</p>
+                    {% endif %}
+                    <!-- Category Name -->
+                    <h3 class="text-lg font-semibold text-gray-800 mt-4">{{ category.name }}</h3>
+                    <!-- More Details Link -->
+                    <a href="{% url 'menu_item_detail' category.id %}" class="text-blue-500 hover:text-blue-700 mt-2 inline-block">
+                        More Details
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 </section>
 
-<!-- Featured Products Grid with Background -->
-<section class="mt-8 bg-gray-100 p-6 rounded-lg shadow-md">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {% for category in categories %}
-        <div class="bg-white p-4 rounded-lg shadow-md">
-            {% if category.image %}
-            <img src="{{ category.image.url }}" alt="{{ category.name }}" class="w-full h-48 object-cover rounded-md">
-            {% else %}
-            <div class="w-full h-48 flex items-center justify-center bg-gray-300 rounded-md">
-                <p class="text-gray-600 font-semibold">No Image Available</p>
-            </div>
-            {% endif %}
-            <p class="mt-2 text-gray-600 font-semibold">{{ category.name }}</p>
-            <a href="{% url 'menu_item_detail' category.id %}" class="text-blue-500">More details</a>
-        </div>
-        {% endfor %}
-    </div>
-<!-- Loop through categories and list food items under each -->
+<!-- Cart Message Container with Tick Icon -->
+<div id="cart-message-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden w-96 p-4 text-center rounded-lg shadow-lg flex items-center justify-center gap-2"></div>
+
 {% for category in categories %}
-    {% if category.menu_items.all %}
-        <section class="mt-8 bg-gray-400 p-6 rounded-lg shadow-md">  
-            <h2 class="text-2xl font-bold mb-4 text-gray-800" data-aos="fade-in">{{ category.name }}</h2>
+{% if category.menu_items.all %}
+    <section class="mt-4 bg-cover bg-center bg-no-repeat p-4 rounded-lg shadow-md relative" >
+        
+        <div class="bg-gray-200 p-6 rounded-lg shadow-lg">
+            <h2 class="text-1xl font-bold text-gray-800" data-aos="fade-in">{{ category.name }}</h2>
+
+            <!-- Content goes here -->
+        </div>
 
             <!-- Grid Layout for Menu Items -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {% for item in category.menu_items.all %}
-                <div class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition relative" data-aos="fade-up">
-                    <a href="{% url 'menu_item_detail' item.id %}" class="block">
-                        {% if item.image %}
-                            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-32 object-cover rounded-md">
-                        {% else %}
-                            <img src="https://via.placeholder.com/150" alt="No Image" class="w-full h-32 object-cover rounded-md">
-                        {% endif %}
-                        <h3 class="text-lg font-semibold mt-2">{{ item.name }}</h3>
-                        <p class="text-gray-600 text-sm">{{ item.description }}</p>
-                        <p class="text-lg font-bold text-blue-600 mt-1">₹{{ item.price }}</p>
-                    </a>
+            <div class="relative">
+                <!-- Scrollable Container -->
+                <div class="menu-items-container overflow-hidden">
+                    <div class="flex gap-6 transition-transform duration-300" id="menu-items-{{ category.id }}">
+                        {% for item in category.menu_items.all %}
+                            <div class="min-w-[250px] bg-white p-4 rounded-lg shadow hover:shadow-lg transition relative">
+                                <a href="{% url 'menu_item_detail' item.id %}" class="block">
+                                    {% if item.image %}
+                                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-32 object-cover rounded-md">
+                                    {% else %}
+                                        <img src="https://via.placeholder.com/150" alt="No Image" class="w-full h-32 object-cover rounded-md">
+                                    {% endif %}
+                                    <h3 class="text-lg font-semibold mt-2">{{ item.name }}</h3>
+                                    <p class="text-gray-600 text-sm">{{ item.description }}</p>
+                                    <p class="text-lg font-bold text-blue-600 mt-1">₹{{ item.price }}</p>
+                                </a>
 
-                    <!-- Add to Cart Button (Fixed) -->
-                    <div class="absolute bottom-2 right-2 opacity-100 transition-opacity duration-300">
-                        <form class="add-to-cart-form" data-id="{{ item.id }}">
-                            {% csrf_token %}
-                            <button type="button" class="add-to-cart-btn bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-lg">
-                                Add to Cart
-                            </button>
-                        </form>
+                                <!-- Add to Cart Button -->
+                                <div class="absolute bottom-2 right-2 opacity-100 transition-opacity duration-300">
+                                    <form class="add-to-cart-form" data-id="{{ item.id }}">
+                                        {% csrf_token %}
+                                        <button type="button" class="add-to-cart-btn bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-lg">
+                                            Add to Cart
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
-
                 </div>
-                {% endfor %}
-            </div>
-        </section>
-    {% endif %}
-{% endfor %}
 
-<!-- Cart Count Badge -->
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between mt-4">
+                    <button class="prev-btn bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg" 
+                            onclick="scrollMenu('prev', '{{ category.id }}')">
+                        Previous
+                    </button>
+                    <button class="next-btn bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg" 
+                            onclick="scrollMenu('next', '{{ category.id }}')">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endif %}
+{% endfor %}
 
 <!-- Include JavaScript -->
 <script src="{% static 'js/cart.js' %}"></script>
@@ -217,11 +253,51 @@
     </form>
 </section>
 <script>
+ // Function to handle menu scrolling
+function scrollMenu(direction, categoryId) {
+    const container = document.getElementById(`menu-items-${categoryId}`);
+    if (!container) return;
+
+    const itemWidth = 248 + 16; // Width of each item + gap
+    const visibleItems = 4; // Number of items to display at a time
+    const totalItems = container.children.length;
+    const maxScroll = (totalItems - visibleItems) * itemWidth;
+
+    // Get the current transform value
+    const style = window.getComputedStyle(container);
+    const matrix = new DOMMatrix(style.transform);
+    let currentTransform = matrix.m41; // m41 is the translateX value
+
+    if (direction === "next" && Math.abs(currentTransform) < maxScroll) {
+        currentTransform -= itemWidth * visibleItems;
+    } else if (direction === "prev" && currentTransform < 0) {
+        currentTransform += itemWidth * visibleItems;
+    }
+
+    // Apply the transformation
+    container.style.transform = `translateX(${currentTransform}px)`;
+
+    // Disable buttons if at the start or end
+    const prevButton = document.querySelector(`#menu-items-${categoryId} ~ .prev-btn`);
+    const nextButton = document.querySelector(`#menu-items-${categoryId} ~ .next-btn`);
+
+    prevButton.disabled = currentTransform >= 0;
+    nextButton.disabled = Math.abs(currentTransform) >= maxScroll;
+}
+
     document.addEventListener("DOMContentLoaded", function () {
+        /**
+         * Function to retrieve CSRF token from the HTML form.
+         * Used for making secure AJAX requests.
+         */
         function getCSRFToken() {
             return document.querySelector('[name=csrfmiddlewaretoken]').value;
         }
     
+        /**
+         * Event listener for "Add to Cart" buttons.
+         * Sends an AJAX request to add an item to the cart.
+         */
         document.querySelectorAll(".add-to-cart-btn").forEach(button => {
             button.addEventListener("click", function () {
                 let form = this.closest(".add-to-cart-form");
@@ -237,15 +313,40 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    alert(data.message); // Show success message
-                    updateCartCount(); // Refresh cart count
+                    showMessage(data.message, "success");
+                    updateCartCount();
                 })
-                .catch(error => console.error("Error:", error));
+                .catch(error => {
+                    showMessage("Error adding item!", "error");
+                    console.error("Error:", error);
+                });
             });
         });
     
+        /**
+         * Function to display a success or error message.
+         * The message disappears after 3 seconds.
+         */
+        function showMessage(message, type = "success") {
+            let messageContainer = document.getElementById("cart-message-container");
+            
+            messageContainer.className = `fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-96 p-4 text-center rounded-lg shadow-lg ${
+                type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
+            }`;
+    
+            messageContainer.innerHTML = message;
+            messageContainer.classList.remove("hidden");
+    
+            setTimeout(() => {
+                messageContainer.classList.add("hidden");
+            }, 3000);
+        }
+    
+        /**
+         * Function to update the cart item count dynamically.
+         */
         function updateCartCount() {
-            fetch("/cart/count/")  // Fetch latest cart count
+            fetch("/cart/count/")
                 .then(response => response.json())
                 .then(data => {
                     let cartCountElement = document.getElementById("cart-count");
@@ -257,99 +358,68 @@
         }
     });
     
-document.addEventListener("DOMContentLoaded", function () {
-    const bannerCarousel = document.querySelector("#banner-carousel .overflow-x-auto");
-    let isUserScrolling = false;
+    /**
+     * Automatic scrolling for the banner carousel.
+     * Stops on mouse hover and resumes on mouse leave.
+     */
+    document.addEventListener("DOMContentLoaded", function () {
+        const bannerCarousel = document.querySelector("#banner-carousel .overflow-x-auto");
+        let isUserScrolling = false;
     
-    if (!bannerCarousel) return;
-
-    function autoScroll() {
-        if (!isUserScrolling) {
-            bannerCarousel.scrollBy({ left: bannerCarousel.clientWidth, behavior: "smooth" });
+        if (!bannerCarousel) return;
+    
+        function autoScroll() {
+            if (!isUserScrolling) {
+                bannerCarousel.scrollBy({ left: bannerCarousel.clientWidth, behavior: "smooth" });
+            }
         }
-    }
-
-    let interval = setInterval(autoScroll, 4000);
-
-    bannerCarousel.addEventListener("mouseover", () => {
-        isUserScrolling = true;
-        clearInterval(interval);
-    });
-
-    bannerCarousel.addEventListener("mouseleave", () => {
-        isUserScrolling = false;
-        interval = setInterval(autoScroll, 4000);
-    });
-});
-document.addEventListener("DOMContentLoaded", function () {
-    const track = document.getElementById("carousel-track");
-    const slides = document.querySelectorAll(".parallax-slide .parallax-bg");
-
-    function applyParallax() {
-        slides.forEach((slide, index) => {
-            let offset = track.scrollLeft / track.clientWidth - index;
-            slide.style.transform = `translateY(${offset * 20}px)`;
+    
+        let interval = setInterval(autoScroll, 4000);
+    
+        bannerCarousel.addEventListener("mouseover", () => {
+            isUserScrolling = true;
+            clearInterval(interval);
         });
-    }
-
-    track.addEventListener("scroll", applyParallax);
-});
-document.addEventListener("DOMContentLoaded", function() {
-    gsap.from(".menu-item", {
-        opacity: 0,
-        y: 30,
-        stagger: 0.2, // Stagger effect for smooth item-by-item animation
-        duration: 0.8,
-        ease: "easeInOut"
+    
+        bannerCarousel.addEventListener("mouseleave", () => {
+            isUserScrolling = false;
+            interval = setInterval(autoScroll, 4000);
+        });
     });
-});
-
-function filterMenu(category) {
-    let items = document.querySelectorAll(".menu-item");
-    let menuTitle = document.getElementById("menuTitle");
-
-    items.forEach(item => {
-        let itemCategory = item.getAttribute("data-category");
-        if (category === "all" || itemCategory === category) {
-            item.style.display = "block";
-        } else {
-            item.style.display = "none";
+    
+    /**
+     * Parallax scrolling effect for carousel images.
+     */
+    document.addEventListener("DOMContentLoaded", function () {
+        const track = document.getElementById("carousel-track");
+        const slides = document.querySelectorAll(".parallax-slide .parallax-bg");
+    
+        function applyParallax() {
+            slides.forEach((slide, index) => {
+                let offset = track.scrollLeft / track.clientWidth - index;
+                slide.style.transform = `translateY(${offset * 20}px)`;
+            });
         }
+    
+        track.addEventListener("scroll", applyParallax);
     });
-
-    menuTitle.innerText = category === "all" ? "All Menu Items" : `${category} Menu`;
-}
-AOS.init({
-    duration: 1000,  // Animation duration in milliseconds
-    easing: "ease-in-out",  // Smooth easing effect
-    once: true  // Run the animation only once
-});
-document.addEventListener("DOMContentLoaded", function () {
-    let items = document.querySelectorAll(".menu-item");
-    let index = 0;
-    const totalItems = items.length;
-    const itemsToShow = 4;
-
-    function showItems() {
-        // Hide all items
-        items.forEach(item => item.classList.remove("active"));
-        
-        // Show only 4 items at a time
-        for (let i = 0; i < itemsToShow; i++) {
-            let itemIndex = (index + i) % totalItems; // Loop through the items
-            items[itemIndex].classList.add("active");
-        }
-        
-        // Move to the next set of items after 3 seconds
-        index = (index + itemsToShow) % totalItems;
-    }
-
-    // Show initial items
-    showItems();
-
-    // Change items every 3 seconds
-    setInterval(showItems, 5000);
-
+    
+    /**
+     * Smooth menu item fade-in animation using GSAP.
+     */
+    document.addEventListener("DOMContentLoaded", function() {
+        gsap.from(".menu-item", {
+            opacity: 0,
+            y: 30,
+            stagger: 0.2,
+            duration: 0.8,
+            ease: "easeInOut"
+        });
+    });
+    
+    /**
+     * Function to filter menu items based on category selection.
+     */
     function filterMenu(category) {
         let items = document.querySelectorAll(".menu-item");
         let menuTitle = document.getElementById("menuTitle");
@@ -357,30 +427,44 @@ document.addEventListener("DOMContentLoaded", function () {
         items.forEach(item => {
             let itemCategory = item.getAttribute("data-category");
             if (category === "all" || itemCategory === category) {
-                item.classList.add("active");
                 item.style.display = "block";
             } else {
-                item.classList.remove("active");
                 item.style.display = "none";
             }
         });
     
-        // Update the menu title based on the selected category
         menuTitle.innerText = category === "all" ? "All Menu Items" : `${category} Menu`;
     }
-});
- document.addEventListener("DOMContentLoaded", function () {
-        const carousel = document.getElementById("carousel-inner");
-        const banners = document.querySelectorAll(".parallax-banner");
-
-        carousel.addEventListener("scroll", () => {
-            let scrollLeft = carousel.scrollLeft;
-            
-            banners.forEach((banner, index) => {
-                let speed = (index + 1) * 0.2; // Different speeds for layers
-                banner.style.transform = `translateX(${scrollLeft * speed * -0.5}px)`;
-            });
-        });
+    
+    /**
+     * Initialize AOS (Animate on Scroll) for smooth animations.
+     */
+    AOS.init({
+        duration: 1000,
+        easing: "ease-in-out",
+        once: true
+    });
+    
+    /**
+     * Function to cycle through menu items every few seconds.
+     */
+    document.addEventListener("DOMContentLoaded", function () {
+        let items = document.querySelectorAll(".menu-item");
+        let index = 0;
+        const totalItems = items.length;
+        const itemsToShow = 4;
+    
+        function showItems() {
+            items.forEach(item => item.classList.remove("active"));
+            for (let i = 0; i < itemsToShow; i++) {
+                let itemIndex = (index + i) % totalItems;
+                items[itemIndex].classList.add("active");
+            }
+            index = (index + itemsToShow) % totalItems;
+        }
+    
+        showItems();
+        setInterval(showItems, 5000);
     });
 </script>
 <script src="{% static 'js/script.js' %}"></script>

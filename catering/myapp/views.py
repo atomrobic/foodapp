@@ -41,15 +41,23 @@ from django.contrib.auth import login, authenticate
 from .models import CustomUser  # Removed Customer model import
 
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, get_user_model
+
+User = get_user_model()
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth import login, authenticate
+from .models import CustomUser, Customer
+
 def register(request):
     if request.method == "POST":
         username = request.POST.get("username")
         email = request.POST.get("email")
         password = request.POST.get("password")
         confirm_password = request.POST.get("confirm_password")
-        role = request.POST.get("role", "customer")
-
-        print(f"Received -> Username: {username}, Email: {email}, Role: {role}")
+        phone = request.POST.get("phone", "")  # Get phone number from form
 
         if password != confirm_password:
             messages.error(request, "Passwords do not match.")
@@ -63,38 +71,28 @@ def register(request):
             messages.error(request, "Email already registered.")
             return redirect("register")
 
-        if role == "admin" and not request.user.is_superuser:
-            messages.error(request, "Only superusers can create admin accounts.")
-            return redirect("register")
-
         try:
-            user = CustomUser.objects.create_user(
-                username=username,
-                email=email,
-                password=password
-            )
-            print(f"User Created: {user.username}")
+            # Create User
+            user = CustomUser.objects.create_user(username=username, email=email, password=password)
 
-            user.role = role
-            user.save()
+            # Create Customer entry
+            Customer.objects.create(user=user, phone=phone)
 
-            # Authenticate & login user
-            user = authenticate(request, username=username, password=password)
-            if user is None:
-                user = get_user_model().objects.get(username=username)
-                user.backend = 'django.contrib.auth.backends.ModelBackend'
+            # Authenticate and log in the user
+            user = authenticate(request, username=username, password=password ,customer=Customer)
+            if user:
                 login(request, user)
 
             messages.success(request, "Signup successful!")
-            print("Redirecting to login page...")
-            return redirect("login")  # Ensure this matches URLs
+            return redirect("login")  # Redirect to home or dashboard
 
         except Exception as e:
-            print(f"Error Creating User: {e}")
-            messages.error(request, "Something went wrong. Try again.")
+            messages.error(request, f"Error: {str(e)}")
             return redirect("register")
 
     return render(request, "register.html")
+
+
 from django.shortcuts import render
 from django.db.models import Sum
 from .models import CustomUser, Order
@@ -123,34 +121,31 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+
 def user_login(request):
-    form = AuthenticationForm(request, data=request.POST) if request.method == "POST" else AuthenticationForm()
-
-    if request.method == "POST":
-        if form.is_valid():
-            username = form.cleaned_data["username"]
-            password = form.cleaned_data["password"]
-            user = authenticate(username=username, password=password)
-
-            if user is not None:
-                login(request, user)
-                
-                # Debugging output
-                print(f"User {user.username} authenticated successfully. Is Superuser: {user.is_superuser}")
-
-                # Check if user is an admin
-                if user.is_superuser:
-                    return redirect("admin_catering_orders")  # Ensure 'adminorders' exists in urls.py
-                else:
-                    return redirect("catering_home")  # Ensure 'catering_home' exists in urls.py
-
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            login(request, user)
+            
+            # Check if the user is an admin
+            if user.is_staff or user.is_superuser:
+                messages.success(request, 'Successfully logged in! Welcome, Admin.')
+                return redirect('dashboard')  # Redirect to the dashboard for admins
             else:
-                messages.error(request, "Invalid username or password.")
+                messages.success(request, 'Successfully logged in! Welcome.')
+                return redirect('catering_home')  # Redirect to the catering home page for regular users
         else:
-            messages.error(request, "Invalid form submission.")
-
-    return render(request, "login.html", {"form": form})
-
+            messages.error(request, 'Invalid username or password.')
+            return redirect('login')  # Redirect back to the login page with an error message
+    
+    return render(request, 'login.html')
 
 # User Logout View
 @login_required
@@ -159,17 +154,44 @@ def user_logout(request):
     return JsonResponse({"message": "Logout successful"}, status=200)
 
 
-# Get User Profile
-@login_required
-def user_profile(request):
-    user = request.user
-    return JsonResponse({
-        "username": user.username,
-        "email": user.email,
-        "role": user.role,
-        "phone": user.phone,
-        "address": user.address,
-    })
+
+
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.views import View
+from .models import Customer
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Customer
+
+from django.shortcuts import render, get_object_or_404
+from .models import Customer, Order
+
+from django.shortcuts import render, get_object_or_404
+from .models import Customer
+
+
+def customer_detail(request):
+    # Get all customers
+    customers = Customer.objects.all()
+
+    # Prepare the data for the template
+    context = {
+        "customers": customers,
+    }
+
+    return render(request, "customer_data.html", context)
+# # Get User Profile
+# @login_required
+# def user_profile(request):
+#     user = request.user
+#     return JsonResponse({
+#         "username": user.username,
+#         "email": user.email,
+#         "role": user.role,
+#         "phone": user.phone,
+#         "address": user.address,
+#     })
 
 
 # Update User Profile
@@ -238,49 +260,57 @@ def place_catering_order(request):
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from .models import CateringOrder,Category,MenuItem
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from .models import CateringOrder, OrderItem  # Ensure you import both models
-
-from django.shortcuts import render
+from django.db.models import Sum
 from .models import Order, CateringOrder
 
-from django.shortcuts import render
-from .models import Order, CateringOrder
-
-
-
-def order_list(request):
-    catering_orders = CateringOrder.objects.all()
-    cart_orders = Order.objects.all()
-
-    # Add an 'order_type' attribute for template filtering
-    for order in catering_orders:
-        order.order_category = "catering"
-    
-    for order in cart_orders:
-        order.order_category = "cart"
-
-    # Combine both querysets
-    orders = list(catering_orders) + list(cart_orders)
-
-    return render(request, "order_list.html", {"orders": orders})
-
-
-from django.shortcuts import get_object_or_404, redirect
-from django.http import JsonResponse
-from .models import Order, CateringOrder
 
 
 def update_order_status(request, order_id):
-    order = get_object_or_404(Order, id=order_id)  # If using CateringOrder, change this logic
+    """Update the status of an order (handles both CateringOrder and Order)"""
+    # Fetch the order (CateringOrder or Order)
+    catering_order = CateringOrder.objects.filter(id=order_id).first()
+    if catering_order:
+        order = catering_order
+        order_type = "catering"
+    else:
+        order = get_object_or_404(Order, id=order_id)
+        order_type = "cart"
+
     if request.method == "POST":
-        new_status = request.POST.get("status")
-        if new_status in ["pending", "confirmed", "cancelled"]:
+        new_status = request.POST.get("status", "").strip().capitalize()  # Normalize input
+        print(f"Raw status from request: '{request.POST.get('status')}'")  # Debugging
+        print(f"Normalized status: '{new_status}'")  # Debugging
+
+        valid_statuses = ["Pending", "Processing", "Completed", "Cancelled"]
+        if new_status in valid_statuses:
             order.status = new_status
             order.save()
-    return redirect("order_list")
+            messages.success(request, f"{order_type.capitalize()} order status updated to {order.status}.")
+        else:
+            print(f"Invalid status received: '{new_status}'")  # Debugging
+            messages.error(request, "Invalid status update.")
+
+    return redirect("admin_catering_orders")
+from django.db.models import Sum
+from django.shortcuts import render
+from .models import CateringOrder, Order
+
+def order_list(request):
+    """Fetch and display all orders (catering & cart)"""
+    catering_orders = CateringOrder.objects.all()
+    cart_orders = Order.objects.annotate(total_quantity=Sum('order_items__quantity'))
+
+    # Assign order_category for template filtering
+    for order in catering_orders:
+        order.order_category = "catering"
+        order.total_quantity = 0  # Default for catering orders
+
+    for order in cart_orders:
+        order.order_category = "cart"
+
+    orders = list(catering_orders) + list(cart_orders)
+
+    return render(request, "order_list.html", {"orders": orders})
 
 def menu_items_view(request):
     """ View to display menu items with photos and prices """
@@ -293,85 +323,14 @@ def menu_items_view(request):
 def is_admin(user):
     return user.is_staff 
 
-# def add_menu_item(request):
-#     categories = Category.objects.all()  # Fetch all categories
-#     selected_category = request.GET.get("category", "all")  # Get selected category from request
-
-#     # Ensure selected_category is an integer (or 'all')
-#     if selected_category.isdigit():
-#         menu_items = MenuItem.objects.filter(category__id=int(selected_category))  # Filter by category
-#     else:
-#         menu_items = MenuItem.objects.all()  # Fetch all menu items
-
-#     if request.method == "POST":
-#         form = MenuItemForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             form.save()
-#             return redirect(request.path)  # ✅ Preserve category filter after adding
-
-#     else:
-#         form = MenuItemForm()
-
-#     return render(request, "add_foods.html", {
-#         "form": form,
-#         "menu_items": menu_items,
-#         "categories": categories,
-#         "selected_category": selected_category,  # ✅ Pass selected category to template
-#     })
-
-# def add_menu_item(request):
-#     categories = Category.objects.all()  # Fetch all categories
-
-#     if request.method == "POST":
-#         form = MenuItemForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             form.save()
-#             return redirect("add_menu_item")  # Reload the page after saving
-#     else:
-#         form = MenuItemForm()
-
-#     menu_items = MenuItem.objects.all()  # Fetch all menu items from the database
-#     return render(request, "add_foods.html", {
-#         "form": form,
-#         "menu_items": menu_items,
-#         "categories": categories,  # ✅ Pass categories to the template
-#         })
-
-from django.shortcuts import render, redirect
-from .models import Category, MenuItem, FoodName
 
 
-from django.shortcuts import render, redirect
 from .models import Category, MenuItem
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
 from .models import MenuItem, Category
 from .form import CombinedMenuFoodForm
 
-# def add_menu_item(request):
-#     categories = Category.objects.all()
-#     menu_items = MenuItem.objects.all()
-
-#     combined_form = CombinedMenuFoodForm(request.POST or None, request.FILES or None)
-
-#     if request.method == "POST":
-#         if combined_form.is_valid():
-#             combined_form.save()
-#             return redirect("add_menu_item")  # Reload page after saving
-#         else:
-#             print("Form Errors:", combined_form.errors)  # Debugging
-
-#     return render(request, "add_foods.html", {
-#         "combined_form": combined_form,
-#         "menu_items": menu_items,
-#         "categories": categories,
-#     })
     
-    
-from django.shortcuts import render, redirect
-from .models import Category, MenuItem
-from .form import CombinedMenuFoodForm
-
 def add_menu_item(request):
     categories = Category.objects.all()
     category_id = request.GET.get("category")  # Get selected category from URL
@@ -564,19 +523,15 @@ from .models import Cart, CartItem, MenuItem
 from decimal import Decimal
 
 from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from .models import Cart, CartItem, MenuItem
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
 from .models import CartItem
 from decimal import Decimal
+
 
 def view_cart(request):
     if not request.user.is_authenticated:
         return redirect('login')  # Redirect to login if user is not authenticated
 
-    # Fetch cart items only for the logged-in user
+    # Fetch cart items for the logged-in user
     cart_items = CartItem.objects.filter(cart__customer=request.user)
 
     tax_rate = Decimal('0.10')  # Example tax rate (10%)
@@ -588,13 +543,17 @@ def view_cart(request):
     tax = subtotal * tax_rate
     total = subtotal + tax
 
+    # Fetch user's saved addresses (max 2)
+    user_addresses = DeliveryAddress.objects.filter(user=request.user)[:2]
+
     return render(request, 'add_cart.html', {
         'cart_items': cart_items,
         'subtotal': subtotal,
         'tax': tax,
-        'total': total
+        'total': total,
+        'addresses': user_addresses,  # Pass addresses to template
     })
-
+    
 def update_quantity(request, item_id):
     if request.method == 'POST':
         cart_item = get_object_or_404(CartItem, id=item_id)
@@ -611,27 +570,6 @@ def remove_item(request, item_id):
     cart_item.delete()
     return redirect('cart')
 
-
-# def menu_detail(request, item_id):
-#     category_item = get_object_or_404(Category, id=item_id)
-#     # menu_item = MenuItem.objects.filter(category =category_item )
-    
-#     categories = Category.objects.all()
-
-#     # Get selected category from query parameters
-#     category_id = request.GET.get("category", "all")
-
-#     if category_id != "all" and category_id.isdigit():
-#         filtered_items = MenuItem.objects.filter(category_id=category_id)
-#     else:
-#         filtered_items = MenuItem.objects.all()
-
-
-#     return render(request, "category_detail.html", {
-#         "filtered_items": filtered_items,
-#         "category_item":category_item,
-#         "categories":categories
-#         })
 # views.py
 from django.shortcuts import render, get_object_or_404
 from .models import Cart, CartItem
@@ -661,35 +599,40 @@ def add_to_cart(request, item_id):
 from django.shortcuts import render, redirect
 from .models import DeliveryAddress, Order, Cart, CartItem
 from django.shortcuts import redirect
+from django.contrib import messages
+from .models import DeliveryAddress, Order, Cart
 
 def checkout(request):
     if request.method == "POST":
-        full_name = request.POST.get("full_name")
-        address = request.POST.get("address")
-        city = request.POST.get("city")
-        zipcode = request.POST.get("zipcode")
-        country = request.POST.get("country")
+        if "delete_address" in request.POST:  # Check if delete button is clicked
+            address_id = request.POST.get("delete_address")
+            address = get_object_or_404(DeliveryAddress, id=address_id, user=request.user)
+            address.delete()
+            messages.success(request, "Address deleted successfully!")
+            return redirect("checkout")
 
-        # Get user cart
+        selected_address_id = request.POST.get("selected_address")
+
+        # Ensure cart exists
         cart = Cart.objects.filter(customer=request.user).first()
         if not cart or not cart.cart_items.exists():
-            return redirect("cart")  # Redirect if cart is empty
+            messages.error(request, "Your cart is empty.")
+            return redirect("cart")
 
-        # Save address
-        delivery_address = DeliveryAddress.objects.create(
-            user=request.user,
-            full_name=full_name,
-            address=address,
-            city=city,
-            zipcode=zipcode,
-            country=country
-        )
+        # Ensure an address is selected
+        if not selected_address_id:
+            messages.error(request, "Please select a delivery address.")
+            return redirect("checkout")
 
-        # Create an order
+        # Get the selected address
+        delivery_address = get_object_or_404(DeliveryAddress, id=selected_address_id, user=request.user)
+
+        # Create order
+        total_price = sum(item.get_total_price() for item in cart.cart_items.all())  # Ensure `get_total_price()` exists
         order = Order.objects.create(
             customer=request.user,
-            delivery_address=delivery_address,  # ✅ Set the delivery address
-            total_price=cart.calculate_total_price()
+            delivery_address=delivery_address,
+            total_price=total_price
         )
 
         # Transfer cart items to order
@@ -699,9 +642,12 @@ def checkout(request):
         # Clear cart
         cart.cart_items.all().delete()
 
-        return redirect("order_success", order_id=order.id)  # ✅ Pass order_id
+        return redirect("order_success", order_id=order.id)
 
-    return render(request, "checkout.html")
+    # Fetch user's saved addresses
+    addresses = DeliveryAddress.objects.filter(user=request.user)
+    return render(request, "checkout.html", {"addresses": addresses})
+
 
 
 from django.contrib.auth.decorators import login_required
@@ -752,84 +698,38 @@ def menu_items_detail(request, item_id):
     return render(request, 'menu_details.html', context)
 ###################
 
-from django.shortcuts import render, get_object_or_404
 from .models import MenuItem, Category
 
-# def menu_item_detail(request, item_id):
-#     # Get the selected menu item
-#     menu_item = get_object_or_404(MenuItem, id=item_id)
 
-#     # Get all categories for filtering dropdown
-#     categories = Category.objects.all()
 
-#     # Get selected category from query parameters (if any)
-#     selected_category_id = request.GET.get('category', 'all')
-
-#     # Filter menu items based on category
-#     if selected_category_id == "all":
-#         filtered_items = MenuItem.objects.all().exclude(id=menu_item.id)
-#     else:
-#         filtered_items = MenuItem.objects.filter(category__id=selected_category_id).exclude(id=menu_item.id)
-
-#     # Get similar items (from the same category)
-#     related_items = MenuItem.objects.filter(category=menu_item.category).exclude(id=menu_item.id)[:5]
-
-#     context = {
-#         'menu_item': menu_item,
-#         'categories': categories,
-#         'selected_category': selected_category_id,
-#         'filtered_items': filtered_items,
-#         'related_items': related_items,
-#     }
-#     return render(request, 'details.page.html', context)
-
-# # def menu_detail(request, item_id):
-# #     """Displays details of a specific menu item."""
-# #     menu_item = get_object_or_404(MenuItem, id=item_id)
-# #     return render(request, "details_page.html", {"menu_item": menu_item})
-
-# def menu_detail(request, item_id):
-#     """View to display menu items of a specific category"""
-    
-#     # Ensure category exists
-#     category_item = get_object_or_404(Category, id=item_id)
-    
-#     # Get all categories for dropdown
-#     categories = Category.objects.all()
-
-#     # Get only menu items belonging to this category
-#     filtered_items = MenuItem.objects.filter(category=category_item)
-
-#     return render(request, "details_page.html", {  
-#         "filtered_items": filtered_items,
-#         "category_item": category_item,  # ✅ Ensure this is passed
-#         "categories": categories
-#     })
-from django.shortcuts import render, get_object_or_404
-from django.http import Http404
-from .models import MenuItem, Category
 
 def menu_item_detail(request, item_id):
-    """Displays details of a specific menu item and filters items by category."""
+    """Displays details of a specific menu item with filtering by price and category."""
     menu_item = get_object_or_404(MenuItem, id=item_id)
     categories = Category.objects.all()
 
-    # Get selected category from query parameters
+    # Get selected category & price from query params
     category_id = request.GET.get("category", "all")
+    price_range = request.GET.get("price", "")
 
-    if category_id and category_id.isdigit():
-        filtered_items = MenuItem.objects.filter(category_id=category_id)
+    # Filtering by category
+    if category_id.isdigit():
+        filtered_items = MenuItem.objects.filter(category_id=category_id).exclude(id=menu_item.id)
     else:
-        filtered_items = MenuItem.objects.all()
+        filtered_items = MenuItem.objects.exclude(id=menu_item.id)
 
-    # Get count from request (default is 1)
-    user_count = int(request.GET.get("count", 1))
-
-    # Calculate total price
-    total_price = (menu_item.price or 0) * user_count
-
-    # Fetch 3 related items from the same category (excluding the current item)
-    related_items = MenuItem.objects.filter(category=menu_item.category).exclude(id=menu_item.id)[:3] if menu_item.category else []
+    # Filtering by price
+    if price_range:
+        if price_range == "0-500":
+            filtered_items = filtered_items.filter(price__lte=500)
+        elif price_range == "501-1000":
+            filtered_items = filtered_items.filter(price__gt=500, price__lte=1000)
+        elif price_range == "1001-2000":
+            filtered_items = filtered_items.filter(price__gt=1000, price__lte=2000)
+        elif price_range == "2001-5000":
+            filtered_items = filtered_items.filter(price__gt=2000, price__lte=5000)
+        elif price_range == "5001+":
+            filtered_items = filtered_items.filter(price__gt=5000)
 
     return render(
         request,
@@ -838,15 +738,17 @@ def menu_item_detail(request, item_id):
             "menu_item": menu_item,
             "categories": categories,
             "filtered_items": filtered_items,
-            "selected_category": category_id,
-            "user_count": user_count,
-            "total_price": total_price,
-            "related_items": related_items,  # Pass related items to template
         },
     )
 
+
 from django.shortcuts import render
 from .models import Category  # Ensure correct model
+from django.shortcuts import render
+
+def category_detail(request, category_id):
+    return render(request, 'category_detail.html', {'category_id': category_id})
+
 
 def menu_view(request):
     categories = Category.objects.all()  # Fetch categories
@@ -873,3 +775,177 @@ def menu_views(request):
         'selected_category': selected_category,
     }
     return render(request, 'details.html', context)
+
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .form import AddressForm  # Assuming you have an AddressForm
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Order, DeliveryAddress
+
+
+from django.shortcuts import render, redirect
+from .models import DeliveryAddress, Order  # Ensure you import your models
+from django.shortcuts import render
+from .models import DeliveryAddress, Order
+
+def profile_view(request):
+    addresses = DeliveryAddress.objects.filter(user=request.user)[:2]  # Fetch only two addresses
+    recent_orders = Order.objects.filter(customer=request.user).order_by('-ordered_at')[:5]  # Fetch last 5 orders
+
+    context = {
+        'addresses': addresses,
+        'recent_orders': recent_orders,
+    }
+    
+    return render(request, 'profile.html', context)
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .models import DeliveryAddress
+
+
+from django.shortcuts import redirect
+from django.http import JsonResponse
+from .models import DeliveryAddress  # Import your model
+
+# def save_address(request):
+#     if request.method == 'POST':
+#         edit_index = request.POST.get('edit_index')
+#         full_name = request.POST.get('full_name')  # ✅ Fix: Correct field name
+#         address_text = request.POST.get('address')
+#         country = request.POST.get('street')
+#         city = request.POST.get('city')
+#         phone = request.POST.get('phone')
+#         zipcode = request.POST.get('zipcode')
+
+#         # ✅ Fix: Validate required fields before saving
+#         if not full_name:
+#             return JsonResponse({"error": "Full Name is required"}, status=400)
+
+#         if edit_index:
+#             try:
+#                 address_obj = DeliveryAddress.objects.get(id=edit_index, user=request.user)
+#                 address_obj.full_name = full_name  # ✅ Fix: Correct field assignment
+#                 address_obj.address = address_text
+#                 address_obj.country = country
+#                 address_obj.city = city
+#                 address_obj.phone = phone
+#                 address_obj.zipcode = zipcode
+
+#                 address_obj.save()
+#             except DeliveryAddress.DoesNotExist:
+#                 return JsonResponse({"error": "Address not found"}, status=404)
+#         else:
+#             DeliveryAddress.objects.create(
+#                 user=request.user,
+#                 full_name=full_name,  # ✅ Fix: Ensure full_name is not missing
+#                 address=address_text,
+#                 country=country,
+#                 city=city,
+#                 phone=phone,
+#                 zipcode=zipcode
+#             )
+
+#         return redirect('user_dashboard')
+
+#     return redirect('profile')
+
+# from django.shortcuts import get_object_or_404
+
+# def edit_address(request, pk):
+#     address = get_object_or_404(DeliveryAddress, pk=pk, user=request.user)
+#     if request.method == 'POST':
+#         form = AddressForm(request.POST, instance=address)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('profile')
+#     else:
+#         form = AddressForm(instance=address)
+#     return render(request, 'edit_address.html', {'form': form})
+from django.shortcuts import get_object_or_404, redirect
+from django.http import JsonResponse
+from .models import DeliveryAddress
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect
+from .models import DeliveryAddress
+
+def save_address(request):
+    if request.method == 'POST':
+        address_id = request.POST.get('id')  # Use 'id' to differentiate edit vs. create
+        full_name = request.POST.get('full_name')
+        address_text = request.POST.get('address')
+        country = request.POST.get('country')
+        city = request.POST.get('city')
+        phone = request.POST.get('phone')
+        zipcode = request.POST.get('zipcode')
+
+        # Ensure required fields
+        if not full_name or not address_text or not city or not phone or not zipcode:
+            return JsonResponse({"error": "All fields are required"}, status=400)
+
+        # If address_id exists, update; otherwise, create new
+        if address_id:
+            address_obj = get_object_or_404(DeliveryAddress, id=address_id, user=request.user)
+        else:
+            address_obj = DeliveryAddress(user=request.user)
+
+        # Update fields
+        address_obj.full_name = full_name
+        address_obj.address = address_text
+        address_obj.country = country
+        address_obj.city = city
+        address_obj.phone = phone
+        address_obj.zipcode = zipcode
+        address_obj.save()
+
+        # Determine the next page (Profile or Cart) based on request
+        next_page = request.POST.get('next', 'profile')  # Default to 'profile'
+
+        # JSON response for AJAX calls (dynamic updates)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                "success": True,
+                "message": "Address saved successfully!",
+                "next_page": next_page,
+                "address": {
+                    "id": address_obj.id,
+                    "full_name": address_obj.full_name,
+                    "address": address_obj.address,
+                    "city": address_obj.city,
+                    "zipcode": address_obj.zipcode,
+                    "phone": address_obj.phone
+                }
+            })
+
+        return redirect(next_page)  # Redirect based on where the request came from
+
+    return redirect('profile')  # If not POST, go to profile
+
+
+from django.contrib import messages
+
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib import messages
+from .models import DeliveryAddress
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib import messages
+
+def delete_address(request, pk):
+    address = get_object_or_404(DeliveryAddress, pk=pk, user=request.user)
+    
+    if request.method == 'POST':
+        address.delete()
+        messages.success(request, '✅ Address deleted successfully!')
+
+    # Determine where to redirect (cart or profile)
+    next_page = request.GET.get('next', 'user_dashboard')  # Default: user_dashboard
+    return redirect(next_page)
