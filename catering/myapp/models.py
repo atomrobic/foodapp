@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import now  # Import now() correctly
 
 class CustomUser(AbstractUser):
     ADMIN = "admin"
@@ -29,16 +30,18 @@ class Customer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     phone = models.CharField(max_length=15, blank=True, null=True)  # Phone number
     total_spent = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Track total spending
-
+    
+    
     def update_total_spent(self):
         """Recalculate and update total spending from related orders."""
-        total = self.orders.aggregate(total=models.Sum('total_price'))['total'] or 0
+        from myapp.models import Order  # Import here to avoid circular imports
+        total = Order.objects.filter(customer=self.user).aggregate(total=models.Sum("total_price"))["total"] or 0
         self.total_spent = total
         self.save()
 
     def __str__(self):
         return f"{self.user.email} - {self.phone if self.phone else 'No Phone'} - ${self.total_spent}"
-
+    
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
     image = models.ImageField(upload_to="menu_items/", blank=True, null=True)
@@ -97,11 +100,24 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
     total_price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
 
+    def can_cancel(self):
+        """Check if the order was created within the last 15 minutes"""
+        if self.ordered_at:  # ✅ Check if ordered_at is not None
+            return (now() - self.ordered_at).total_seconds() < 900  # 900 sec = 15 min
+        return False
+    
 def get_delivery_address(self):
     if self.customer and hasattr(self.customer, "address"):
         return self.customer.address
     return "No address available"
 
+def save(self, *args, **kwargs):
+        """Override save to update total_spent in Customer."""
+        super().save(*args, **kwargs)
+        self.customer.update_total_spent()  # ✅ Automatically updates total spent
+
+def __str__(self):
+        return f"Order {self.id} - {self.customer.user.email} - {self.status}"
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_items")

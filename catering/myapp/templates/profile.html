@@ -11,188 +11,203 @@
                 <i class="fas fa-user-circle text-6xl text-gray-500 mb-4"></i>
                 <h1 class="text-lg font-bold mb-2">{{ user.username }}</h1>
                 <h1 class="text-lg font-bold mb-2">{{ user.email }}</h1>
-
                 <p class="text-gray-600 mb-4">Food Enthusiast</p>
                 <p class="text-sm text-gray-500 mb-4">Exploring new flavors one bite at a time 🍴</p>
             </div>
         </div>
 
-       
+        <!-- Right Column (Address Book) -->
+        <div class="w-full md:w-2/3 px-4" x-data="{ 
+            showForm: false, 
+            editIndex: null, 
+            newAddress: { id: '', full_name: '', address: '', country: '', city: '', zipcode: '', phone: '' }, 
+            addressCount: {{ addresses|length }} 
+        }">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold mb-4">Address Book</h2>
 
+                {% if addresses %}
+                    {% for address in addresses %}
+                        <div class="border rounded-lg p-4 bg-gray-50 mb-2 relative">
+                            <h3 class="font-semibold">{{ address.full_name }}</h3>
+                            <p class="text-gray-600 text-sm">
+                                {{ address.address }}, {{ address.city }}, {{ address.zipcode }}<br>
+                                Phone: {{ address.phone }}
+                            </p>
+                            <div class="absolute top-2 right-2 space-x-2">
+                                <!-- Edit Button -->
+                                <button @click="
+                                    showForm = true;
+                                    editIndex = '{{ address.id }}';
+                                    newAddress = {
+                                        id: '{{ address.id }}',
+                                        full_name: '{{ address.full_name|escapejs }}',
+                                        address: '{{ address.address|escapejs }}',
+                                        country: '{{ address.country|escapejs }}',
+                                        city: '{{ address.city|escapejs }}',
+                                        zipcode: '{{ address.zipcode|escapejs }}',
+                                        phone: '{{ address.phone|escapejs }}'
+                                    }" 
+                                    class="text-blue-500 hover:text-blue-700 transition-colors duration-200" 
+                                    title="Edit">
+                                    <i class="fas fa-edit text-lg"></i>
+                                </button>
+                                
+                                <!-- Delete Button -->
+                                <form action="{% url 'delete_address' address.id %}" method="post" class="inline">
+                                    {% csrf_token %}
+                                    <button 
+                                        type="submit" 
+                                        class="text-red-500 hover:text-red-700 transition-colors duration-200" 
+                                        onclick="return confirm('Are you sure you want to delete this address?');" 
+                                        title="Delete">
+                                        <i class="fas fa-trash text-lg"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No saved addresses.</p>
+                {% endif %}
 
+                <!-- Maximum Address Message -->
+                <p class="text-red-500 mt-4" {% if addresses|length < 2 %}hidden{% endif %}>
+                    You can only save up to two addresses.
+                </p>
 
-        <!-- Right Column -->
-<div class="w-full md:w-2/3 px-4" x-data="{ 
-    showForm: false, 
-    editIndex: null, 
-    newAddress: { 
-        id: '', 
-        full_name: '', 
-        address: '', 
-        country: '', 
-        city: '', 
-        zipcode: '', 
-        phone: '' 
-    }, 
-    addressCount: {{ addresses|length }} 
-}">
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-bold mb-4">Address Book</h2>
+                <!-- Add New Address Button -->
+                <button @click="
+                    if (addressCount < 2) { 
+                        showForm = true; 
+                        editIndex = null; 
+                        newAddress = { id: '', full_name: '', address: '', country: '', city: '', zipcode: '', phone: '' }; 
+                    }"
+                    class="mt-4 text-red-500 font-semibold text-sm">+ Add New Address
+                </button>
 
-        {% if addresses %}
-            {% for address in addresses %}
-                <div class="border rounded-lg p-4 bg-gray-50 mb-2 relative">
-    
-                    <div class="border rounded-lg p-4 bg-gray-50 mb-2">
-                        <h3 class="font-semibold">{{ address.full_name }}</h3>
-                        <p class="text-gray-600 text-sm">
-                            {{ address.address }}, {{ address.city }}, {{ address.zipcode }}<br>
-                            Phone: {{ address.phone }}
-                        </p>
-                    </div>
-                    <div class="absolute top-2 right-2 space-x-2">
-                        <!-- Edit Button -->
-                        <button 
-                            @click="
-                                showForm = true;
-                                editIndex = '{{ address.id }}';
-                                newAddress = {
-                                    id: '{{ address.id }}',
-                                    full_name: '{{ address.full_name|escapejs }}',
-                                    address: '{{ address.address|escapejs }}',
-                                    country: '{{ address.country|escapejs }}',
-                                    city: '{{ address.city|escapejs }}',
-                                    zipcode: '{{ address.zipcode|escapejs }}',
-                                    phone: '{{ address.phone|escapejs }}'
-                                }" 
-                            class="text-blue-500 hover:text-blue-700 transition-colors duration-200" 
-                            title="Edit">
-                            <i class="fas fa-edit text-lg"></i>
-                        </button>
-                    
-                        <!-- Delete Button -->
-                        <form action="{% url 'delete_address' address.id %}" method="post" class="inline">
-                            {% csrf_token %}
-                            <button 
-                                type="submit" 
-                                class="text-red-500 hover:text-red-700 transition-colors duration-200" 
-                                onclick="return confirm('Are you sure you want to delete this address?');" 
-                                title="Delete">
-                                <i class="fas fa-trash text-lg"></i>
-                            </button>
-                        </form>
-                    </div>
+                <!-- Address Form (Edit/Create) -->
+                <div x-show="showForm" class="mt-4 p-4 border rounded-lg bg-white shadow-lg">
+                    <h3 class="font-semibold mb-2" x-text="editIndex ? 'Edit Address' : 'Add New Address'"></h3>
+                    <form id="addressFormProfile" method="POST" action="{% url 'save_address' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="id" x-model="newAddress.id">
+                        <input type="hidden" name="next" value="profile">
+
+                        <input type="text" name="full_name" placeholder="Full Name" required class="border p-2 w-full mb-2" x-model="newAddress.full_name">
+                        <input type="text" name="address" placeholder="Address" required class="border p-2 w-full mb-2" x-model="newAddress.address">
+                        <input type="text" name="city" placeholder="City" required class="border p-2 w-full mb-2" x-model="newAddress.city">
+                        <input type="text" name="country" placeholder="Country" required class="border p-2 w-full mb-2" x-model="newAddress.country">
+                        <input type="text" name="zipcode" placeholder="Zip Code" required class="border p-2 w-full mb-2" x-model="newAddress.zipcode">
+                        <input type="text" name="phone" placeholder="Phone Number" required class="border p-2 w-full mb-2" x-model="newAddress.phone">
+                        
+                        <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Save Address</button>
+                    </form>
                 </div>
-            {% endfor %}
-        {% else %}
-            <p>No saved addresses.</p>
-        {% endif %}
-
-        <!-- Maximum Address Message -->
-        <p class="text-red-500 mt-4" {% if addresses|length < 2 %}hidden{% endif %}>
-            You can only save up to two addresses.
-        </p>
-
-        <!-- Add New Address Button -->
-        <button @click="if (addressCount < 2) { showForm = true; editIndex = null; newAddress = { id: '', full_name: '', address: '', country: '', city: '', zipcode: '', phone: '' }; }"
-                class="mt-4 text-red-500 font-semibold text-sm">+ Add New Address</button>
-
-        <!-- Address Form (Edit/Create) -->
-        <div x-show="showForm" class="mt-4 p-4 border rounded-lg bg-white shadow-lg">
-            <h3 class="font-semibold mb-2" x-text="editIndex ? 'Edit Address' : 'Add New Address'"></h3>
-            <form id="addressFormProfile" method="POST" action="{% url 'save_address' %}">
-                {% csrf_token %}
-                <input type="hidden" name="id" id="profile_address_id"> <!-- Hidden field for edit -->
-                <input type="hidden" name="next" value="profile">  <!-- Redirects back to Profile -->
-            
-                <input type="text" name="full_name" placeholder="Full Name" required class="border p-2 w-full mb-2">
-                <input type="text" name="address" placeholder="Address" required class="border p-2 w-full mb-2">
-                <input type="text" name="city" placeholder="City" required class="border p-2 w-full mb-2">
-                <input type="text" name="country" placeholder="Country" required class="border p-2 w-full mb-2">
-                <input type="text" name="zipcode" placeholder="Zip Code" required class="border p-2 w-full mb-2">
-                <input type="text" name="phone" placeholder="Phone Number" required class="border p-2 w-full mb-2">
-                
-                <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Save Address</button>
-            </form>
-            
-        </div>
+            </div>
 
         <!-- Recent Orders Section -->
-        <!-- ... existing recent orders code ... -->
-    </div>
-
-             <!-- Recent Orders Section -->
 <div class="mt-6">
     <h2 class="text-xl font-bold mb-4">Recent Orders</h2>
     {% for order in recent_orders %}
-    <div class="border-2 border-green-500 rounded-lg p-4 mb-2">
-        <div class="flex justify-between">
-            <span class="text-sm font-semibold">#{{ order.id }}</span>
-            <span class="text-sm text-green-500 bg-green-100 px-2 py-1 rounded">{{ order.status }}</span>
+        <div class="border-2 border-green-500 rounded-lg p-4 mb-2">
+            <div class="flex justify-between">
+                <span class="text-sm font-semibold">#{{ order.id }}</span>
+                
+                <!-- Conditional Status Styling -->
+                {% if order.status == "Completed" %}
+                    <span class="text-sm text-blue-500 bg-blue-100 px-2 py-1 rounded">{{ order.status }}</span>
+                {% elif order.status == "Cancelled" %}
+                    <span class="text-sm text-red-500 bg-red-100 px-2 py-1 rounded">{{ order.status }}</span>
+                {% else %}
+                    <span class="text-sm text-green-500 bg-green-100 px-2 py-1 rounded">{{ order.status }}</span>
+                {% endif %}
+            </div>
+            
+            <ul class="list-disc pl-4 space-y-1">
+                {% for item in order.order_items.all %}
+                    <li>{{ item.menu_item.name }} × {{ item.quantity }} - ${{ item.price }}</li>
+                {% endfor %}
+            </ul>
+            
+            <p class="text-gray-600 text-sm">Total: ${{ order.total_price }}</p>
+            
+            <!-- Display Countdown Timer -->
+            <p class="text-red-500 text-sm countdown-timer" 
+                data-created-at="{{ order.created_at|date:'Y-m-d H:i:s' }}"></p>
+            
+            <!-- Cancel Button -->
+            <form method="POST" action="{% url 'cancel_order' order.id %}" class="mt-2">
+                {% csrf_token %}
+                <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-700 transition cancel-btn">
+                    Cancel Order
+                </button>
+            </form>
         </div>
-        <ul class="list-disc pl-4 space-y-1">
-            {% for item in order.order_items.all %}
-            <li>{{ item.menu_item.name }} × {{ item.quantity }} - ${{ item.price }}</li>
-            {% endfor %}
-        </ul>
-        <p class="text-gray-600 text-sm">Total: ${{ order.total_price }}</p>
-    </div>
     {% empty %}
-    <p>No recent orders available.</p>
+        <p>No recent orders available.</p>
     {% endfor %}
 </div>
-
-        </div>
-    </div>
-</div>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll("form").forEach(form => {
-            form.addEventListener("submit", function(event) {
-                event.preventDefault();  // Prevent full-page reload
-    
-                let formData = new FormData(this);
-                let nextPage = formData.get("next");  // Get whether it's 'profile' or 'cart'
-    
-                fetch("{% url 'save_address' %}", {
-                    method: "POST",
-                    body: formData,
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert("Address saved successfully!");
-    
-                        // Get the appropriate address list section
-                        let addressContainer = document.getElementById(nextPage + "AddressList");
-                        let newAddress = `
-                            <div class="p-4 border rounded-lg mb-2">
-                                <p><strong>${data.address.full_name}</strong></p>
-                                <p>${data.address.address}, ${data.address.city}, ${data.address.zipcode}</p>
-                                <p>Phone: ${data.address.phone}</p>
-                            </div>`;
-    
-                        addressContainer.innerHTML += newAddress;
-                    } else {
-                        alert("Error saving address!");
-                    }
-                })
-                .catch(error => console.error("Error:", error));
-            });
-        });
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelector("#addressFormProfile").addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        let formData = new FormData(this);
+        
+        fetch("{% url 'save_address' %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Address saved successfully!");
+                location.reload();
+            } else {
+                alert("Error: " + data.error);
+            }
+        })
+        .catch(error => console.error("Error:", error));
     });
-    </script>
-    
+});
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const orders = document.querySelectorAll(".countdown-timer");
+
+    orders.forEach(function (timerElement) {
+        const createdAtStr = timerElement.getAttribute("data-created-at");
+        if (!createdAtStr) return;
+
+        const createdAt = new Date(createdAtStr).getTime();
+        const cancelButton = timerElement.closest("div").querySelector(".cancel-btn");
+
+        function updateTimer() {
+            const now = new Date().getTime();
+            const diff = 15 * 60 * 1000 - (now - createdAt);
+
+            if (diff <= 0) {
+                cancelButton.disabled = true; // Disable cancel button
+                cancelButton.classList.add("bg-gray-400", "cursor-not-allowed");
+                cancelButton.classList.remove("bg-red-500", "hover:bg-red-700");
+                timerElement.textContent = "Cancellation time expired";
+                clearInterval(timer);
+            } else {
+                const minutes = Math.floor(diff / (60 * 1000));
+                const seconds = Math.floor((diff % (60 * 1000)) / 1000);
+                timerElement.textContent = `Cancel within: ${minutes}m ${seconds}s`;
+            }
+        }
+
+        updateTimer(); // Run immediately
+        const timer = setInterval(updateTimer, 1000); // Update every second
+    });
+});
+</script>
+
 {% endblock %}
-
-
-
-
-
-
-
-

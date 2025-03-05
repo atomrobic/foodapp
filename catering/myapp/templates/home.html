@@ -177,65 +177,75 @@
 
 <!-- Cart Message Container with Tick Icon -->
 <div id="cart-message-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden w-96 p-4 text-center rounded-lg shadow-lg flex items-center justify-center gap-2"></div>
+<!-- Category Filter Dropdown -->
+<div class="flex justify-center my-4">
+    <select id="category-filter" class="p-2 border rounded-lg">
+        <option value="all">All Categories</option>
+        {% for category in categories %}
+            <option value="category-{{ category.id }}">{{ category.name }}</option>
+        {% endfor %}
+    </select>
+</div>
 
 {% for category in categories %}
 {% if category.menu_items.all %}
-    <section class="mt-4 bg-cover bg-center bg-no-repeat p-4 rounded-lg shadow-md relative" >
-        
+    <section class="mt-4 bg-cover bg-center bg-no-repeat p-4 rounded-lg shadow-md relative category-section category-{{ category.id }}">
         <div class="bg-gray-200 p-6 rounded-lg shadow-lg">
-            <h2 class="text-1xl font-bold text-gray-800" data-aos="fade-in">{{ category.name }}</h2>
-
-            <!-- Content goes here -->
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800" data-aos="fade-in">{{ category.name }}</h2>
         </div>
 
-            <!-- Grid Layout for Menu Items -->
-            <div class="relative">
-                <!-- Scrollable Container -->
-                <div class="menu-items-container overflow-hidden">
-                    <div class="flex gap-6 transition-transform duration-300" id="menu-items-{{ category.id }}">
-                        {% for item in category.menu_items.all %}
-                            <div class="min-w-[250px] bg-white p-4 rounded-lg shadow hover:shadow-lg transition relative">
-                                <a href="{% url 'menu_item_detail' item.id %}" class="block">
-                                    {% if item.image %}
-                                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-32 object-cover rounded-md">
-                                    {% else %}
-                                        <img src="https://via.placeholder.com/150" alt="No Image" class="w-full h-32 object-cover rounded-md">
-                                    {% endif %}
-                                    <h3 class="text-lg font-semibold mt-2">{{ item.name }}</h3>
-                                    <p class="text-gray-600 text-sm">{{ item.description }}</p>
-                                    <p class="text-lg font-bold text-blue-600 mt-1">₹{{ item.price }}</p>
-                                </a>
+        <!-- Grid Layout for Menu Items -->
+        <div class="relative">
+            <!-- Scrollable Container -->
+            <div class="menu-items-container overflow-x-auto sm:overflow-hidden">
+                <div class="flex gap-4 sm:gap-6 transition-transform duration-300 flex-nowrap sm:flex-wrap justify-start" id="menu-items-{{ category.id }}">
+                    {% for item in category.menu_items.all %}
+                        <div class="min-w-[200px] sm:min-w-[250px] bg-white p-4 rounded-lg shadow hover:shadow-lg transition relative">
+                            <a href="{% url 'menu_item_detail' item.id %}" class="block">
+                                {% if item.image %}
+                                    <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-24 sm:h-32 object-cover rounded-md">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/150" alt="No Image" class="w-full h-24 sm:h-32 object-cover rounded-md">
+                                {% endif %}
+                                <h3 class="text-sm sm:text-lg font-semibold mt-2">{{ item.name }}</h3>
+                                <p class="text-gray-600 text-xs sm:text-sm">{{ item.description }}</p>
+                                <p class="text-sm sm:text-lg font-bold text-blue-600 mt-1">₹{{ item.price }}</p>
+                            </a>
 
-                                <!-- Add to Cart Button -->
-                                <div class="absolute bottom-2 right-2 opacity-100 transition-opacity duration-300">
-                                    <form class="add-to-cart-form" data-id="{{ item.id }}">
-                                        {% csrf_token %}
-                                        <button type="button" class="add-to-cart-btn bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-lg">
-                                            Add to Cart
-                                        </button>
-                                    </form>
-                                </div>
+                            <!-- Add to Cart Button -->
+                            <div class="absolute bottom-2 right-2 opacity-100 transition-opacity duration-300">
+                                <form class="add-to-cart-form" data-id="{{ item.id }}">
+                                    {% csrf_token %}
+                                    <button type="button" class="add-to-cart-btn bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 sm:px-3 rounded-lg text-xs sm:text-sm">
+                                        Add to Cart
+                                    </button>
+                                </form>
                             </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- Navigation Buttons -->
-                <div class="flex justify-between mt-4">
-                    <button class="prev-btn bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg" 
-                            onclick="scrollMenu('prev', '{{ category.id }}')">
-                        Previous
-                    </button>
-                    <button class="next-btn bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg" 
-                            onclick="scrollMenu('next', '{{ category.id }}')">
-                        Next
-                    </button>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </section>
 {% endif %}
 {% endfor %}
+
+<!-- JavaScript for Filtering -->
+<script>
+    document.getElementById("category-filter").addEventListener("change", function() {
+        let selectedCategory = this.value;
+        let sections = document.querySelectorAll(".category-section");
+
+        sections.forEach(section => {
+            if (selectedCategory === "all") {
+                section.style.display = "block";
+            } else {
+                section.style.display = section.classList.contains(selectedCategory) ? "block" : "none";
+            }
+        });
+    });
+</script>
+
 
 <!-- Include JavaScript -->
 <script src="{% static 'js/cart.js' %}"></script>
@@ -254,36 +264,6 @@
 </section>
 <script>
  // Function to handle menu scrolling
-function scrollMenu(direction, categoryId) {
-    const container = document.getElementById(`menu-items-${categoryId}`);
-    if (!container) return;
-
-    const itemWidth = 248 + 16; // Width of each item + gap
-    const visibleItems = 4; // Number of items to display at a time
-    const totalItems = container.children.length;
-    const maxScroll = (totalItems - visibleItems) * itemWidth;
-
-    // Get the current transform value
-    const style = window.getComputedStyle(container);
-    const matrix = new DOMMatrix(style.transform);
-    let currentTransform = matrix.m41; // m41 is the translateX value
-
-    if (direction === "next" && Math.abs(currentTransform) < maxScroll) {
-        currentTransform -= itemWidth * visibleItems;
-    } else if (direction === "prev" && currentTransform < 0) {
-        currentTransform += itemWidth * visibleItems;
-    }
-
-    // Apply the transformation
-    container.style.transform = `translateX(${currentTransform}px)`;
-
-    // Disable buttons if at the start or end
-    const prevButton = document.querySelector(`#menu-items-${categoryId} ~ .prev-btn`);
-    const nextButton = document.querySelector(`#menu-items-${categoryId} ~ .next-btn`);
-
-    prevButton.disabled = currentTransform >= 0;
-    nextButton.disabled = Math.abs(currentTransform) >= maxScroll;
-}
 
     document.addEventListener("DOMContentLoaded", function () {
         /**
@@ -407,15 +387,7 @@ function scrollMenu(direction, categoryId) {
     /**
      * Smooth menu item fade-in animation using GSAP.
      */
-    document.addEventListener("DOMContentLoaded", function() {
-        gsap.from(".menu-item", {
-            opacity: 0,
-            y: 30,
-            stagger: 0.2,
-            duration: 0.8,
-            ease: "easeInOut"
-        });
-    });
+  
     
     /**
      * Function to filter menu items based on category selection.
@@ -439,12 +411,7 @@ function scrollMenu(direction, categoryId) {
     /**
      * Initialize AOS (Animate on Scroll) for smooth animations.
      */
-    AOS.init({
-        duration: 1000,
-        easing: "ease-in-out",
-        once: true
-    });
-    
+  
     /**
      * Function to cycle through menu items every few seconds.
      */

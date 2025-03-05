@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Login Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 768px) {
+            .form-container {
+                min-height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="w-full h-screen flex flex-col md:flex-row">
+        
+        <!-- Background Image Section -->
+        <img src="https://images.unsplash.com/photo-1540569876033-6e5d046a1d77?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1050&q=80" 
+             alt="background" 
+             class="object-cover h-screen w-full md:w-7/12">
+        
+        <!-- Form Container -->
+        <div class="bg-white w-full md:w-5/12 flex items-center justify-center p-4 md:p-0 form-container
+                    rounded-lg md:rounded-none shadow-md md:shadow-lg transform md:-translate-y-16">
+            
+            <div class="w-full md:w-1/2 text-center">
+                <h1 class="text-2xl md:text-3xl font-bold text-blue-500 mb-4">LOGIN</h1>
+                
+                <input type="text" 
+                       name="username" 
+                       placeholder="Username" 
+                       autocomplete="off" 
+                       class="shadow-md border w-full h-12 px-4 mb-3 rounded 
+                              text-orange-500 focus:outline-none focus:border-orange-500 
+                              placeholder-gray-400">
+                
+                <input type="password" 
+                       name="password" 
+                       placeholder="Password" 
+                       autocomplete="off" 
+                       class="shadow-md border w-full h-12 px-4 mb-3 rounded 
+                              text-orange-500 focus:outline-none focus:border-orange-500 
+                              placeholder-gray-400">
+                
+                <button class="bg-gradient-to-r from-orange-500 to-orange-600 
+                               hover:from-orange-600 hover:to-orange-700 
+                               transition-all duration-200 
+                               text-white px-6 py-3 rounded-lg 
+                               shadow-md hover:shadow-lg 
+                               w-full md:w-auto mt-3">
+                    Sign In
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

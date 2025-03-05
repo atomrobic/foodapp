@@ -1,0 +1,38 @@
+{% extends "base/admin_base.html" %}
+
+{% block content %}
+<h1>Admin Dashboard</h1>
+
+<div style="display: flex; gap: 20px;">
+    <div style="border: 1px solid #ddd; padding: 15px;">
+        <h3>Total Earnings</h3>
+        <p>${{ total_earnings }}</p>
+    </div>
+    <div style="border: 1px solid #ddd; padding: 15px;">
+        <h3>Total Customers</h3>
+        <p>{{ total_customers }}</p>
+    </div>
+    <div style="border: 1px solid #ddd; padding: 15px;">
+        <h3>Total Orders</h3>
+        <p>{{ total_orders }}</p>
+    </div>
+</div>
+
+<h2>Top Customers</h2>
+<table border="1">
+    <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Total Spent</th>
+    </tr>
+    {% for customer in customers %}
+    <tr>
+        <td>{{ customer.user.username }}</td>
+        <td>{{ customer.user.email }}</td>
+        <td>${{ customer.total_spent }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+
+{% endblock %}

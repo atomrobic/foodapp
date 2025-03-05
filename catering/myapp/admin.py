@@ -11,6 +11,12 @@ class CustomUserAdmin(UserAdmin):
     list_display = ("username", "email", "role", "phone", "is_staff", "is_active")
     list_filter = ("role", "is_staff", "is_active")
     search_fields = ("username", "email", "phone")
+
+
+def save_model(self, request, obj, form, change):
+        """Override save method to update total_spent when saving in admin."""
+        super().save_model(request, obj, form, change)
+        obj.update_total_spent()    
     
 @admin.register(DeliveryAddress)
 class DeliveryAddressAdmin(admin.ModelAdmin):
@@ -35,7 +41,11 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ("id", "customer", "ordered_at", "status", "total_price" ,"delivery_address",)  # ✅ Replace 'id' with 'uuid'
     list_filter = ("status", "ordered_at")
     search_fields = ("id", "customer__username")  # ✅ Use 'uuid' instead of 'id'
-
+def save_model(self, request, obj, form, change):
+        """Update customer's total_spent when a new order is saved in admin."""
+        super().save_model(request, obj, form, change)
+        obj.customer.update_total_spent()
+        
 from django.apps import AppConfig
 from django.apps import AppConfig
 from importlib import import_module
