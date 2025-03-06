@@ -4,7 +4,7 @@ from myapp.views import (
     register, delete_address,cancel_order, category_detail,admin_dashboard,customer_detail, checkout, save_address, profile_view, menu_view,
     menu_item_detail, menu_views, dashboard_view, get_pending_orders, user_dashboard, order_success,
     update_order_status, user_login, update_quantity, remove_item, user_logout, catering_home,
-    place_catering_order, order_list, add_menu_item, delete_menu_item, add_category, edit_menu_item,
+    place_catering_order, order_list, add_menu_item,admin_login, delete_menu_item, add_category, edit_menu_item,
     menu_report, add_to_cart, view_cart
 )
 from django.conf import settings
@@ -58,6 +58,9 @@ urlpatterns = [
     
         path("admin-dashboard/", admin_dashboard, name="admin_dashboard"),
        path("orders/cancel/<int:order_id>/", cancel_order, name="cancel_order"),
+
+    path("admin/login/", user_login, name="admin_login"),  # Admin login page
+        path("adminlogin/", admin_login, name="adminlogin"),  # Admin login page
 
 
 ]   

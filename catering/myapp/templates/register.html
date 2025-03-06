@@ -103,17 +103,23 @@
 
             setInterval(showNextImage, 3000);
         });
-
-        // Role Selection Confirmation
-        document.getElementById("role").addEventListener("change", function () {
-            if (this.value === "admin") {
-                const confirmRedirect = confirm("Are you sure you want to register as an Admin?");
-                if (confirmRedirect) {
-                    window.location.href = "/login";  // Change to the actual admin login route
+            document.addEventListener("DOMContentLoaded", function () {
+                const roleSelect = document.getElementById("role");
+        
+                if (roleSelect) {
+                    roleSelect.addEventListener("change", function () {
+                        if (this.value === "admin") {
+                            const confirmRedirect = confirm("Are you sure you want to register as an Admin?");
+                            if (confirmRedirect) {
+                                window.location.href = "/adminlogin";  
+                            } else {
+                                this.value = "customer";  // Reset to customer if canceled
+                            }
+                        }
+                    });
                 }
-            }
-        });
-    </script>
-
+            });
+        </script>
+        
 </body>
 </html>

@@ -84,6 +84,7 @@ def dashboard_view(request):
     context = {
         "total_users": total_users,
         "total_orders": total_orders,
+        "catering_orders": catering_orders,  # ✅ Added catering_orders to context
         "total_amount": total_amount,
         "avg_time_spent": "15 min",  # Example value, replace with actual logic
     }
@@ -93,37 +94,55 @@ def dashboard_view(request):
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
 
 def user_login(request):
+    user_type = request.GET.get("type", "user")  # Default: user login
+
     if request.method == "POST":
-        username = request.POST["username"]
-        password = request.POST["password"]
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            # Clear previous session data to prevent role conflicts
-            request.session.flush()
-
+            request.session.flush()  # Clear previous session
             login(request, user)
 
-            # Store user info in the session
             request.session["username"] = user.username
             request.session["user_id"] = user.id
-            request.session["is_admin"] = user.is_staff or user.is_superuser  # Store admin status
-            
+            request.session["is_admin"] = user.is_staff or user.is_superuser  # Correct admin check
+
             messages.success(request, f"Successfully logged in! Welcome, {user.username}")
 
-            # Redirect based on user role
-            if request.session["is_admin"]:
-                return redirect("dashboard")  # Redirect to the admin dashboard
-            else:
-                return redirect("catering_home")  # Redirect to the catering home page
+            # **Correctly redirect admins**
+            if request.session["is_admin"]:  # If user is admin, redirect to dashboard
+                return redirect("dashboard")  
+            else:  # Normal users go to catering home
+                return redirect("catering_home")
 
         else:
             messages.error(request, "Invalid username or password.")
-            return redirect("login")  # Redirect back to login page with an error
+            return redirect(f"/login?type={user_type}")  # Redirect to correct login page
 
-    return render(request, "login.html")
+    # Render the appropriate login page
+    if user_type == "admin":
+        return render(request, "admin_login.html")  
+    else:
+        return render(request, "admin_login.html")
+
+
+from django.shortcuts import render
+
+def admin_login(request):
+    return render(request, 'admin_login.html')  # Your custom admin login template
+
 
 def user_logout(request):
     logout(request)
@@ -328,27 +347,46 @@ def edit_menu_item(request, item_id):
         "edit_foods.html",
         {"form": form, "menu_item": menu_item, "categories": categories},
     )
+    
+from django.db.models import Count
+from .models import Category, MenuItem, OrderItem  # Assuming these models exist
 
-@login_required
+from django.shortcuts import render
+from django.db.models import Count
+from .models import Category, OrderItem  # Import necessary models
+from django.db.models import Count
+from django.shortcuts import render
+from .models import Category, OrderItem, MenuItem
+
 def menu_report(request):
     categories = Category.objects.prefetch_related("menu_items").all()
 
-    if "download_csv" in request.GET:  # Check if download button is clicked
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = 'attachment; filename="menu_report.csv"'
+    # Fetch top 5 selling items
+    top_selling_items = (
+        OrderItem.objects.values("menu_item__id")  # Get item IDs
+        .annotate(total_sold=Count("menu_item"))  # Count sales
+        .order_by("-total_sold")[:5]  # Get top 5 in descending order
+    )
 
-        writer = csv.writer(response)
-        writer.writerow(["Category", "Menu Item", "Price", "Availability"])
+    # Fetch actual names of the menu items from MenuItem model
+    menu_item_map = {
+        item.id: item.name for item in MenuItem.objects.filter(
+            id__in=[item["menu_item__id"] for item in top_selling_items]
+        )
+    }
 
-        for category in categories:
-            for item in category.menu_items.all():
-                writer.writerow(
-                    [category.name, item.name, item.price, "Available" if item.available else "Not Available"]
-                )
+    for item in top_selling_items:
+        item["menu_item__name"] = menu_item_map.get(item["menu_item__id"], "Unknown")
 
-        return response
+    # Ensure items are sorted in descending order by total_sold
+    top_selling_items = sorted(top_selling_items, key=lambda x: x["total_sold"], reverse=True)
 
-    return render(request, "menu_report.html", {"categories": categories})
+    return render(
+        request,
+        "menu_report.html",
+        {"categories": categories, "top_selling_items": top_selling_items},
+    )
+
 
 def catering_home(request):
     # Fetch all categories and banners

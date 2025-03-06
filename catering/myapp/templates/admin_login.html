@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Login Form</title>
+    <title>Admin Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @media (min-width: 768px) {
@@ -17,7 +17,7 @@
     <div class="w-full h-screen flex flex-col md:flex-row">
         
         <!-- Background Image Section -->
-        <img src="https://images.unsplash.com/photo-1540569876033-6e5d046a1d77?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1050&q=80" 
+        <img src="https://img.goodfon.com/original/1920x1080/5/2c/eda-laym-lime-citrusy-frukty.jpg" 
              alt="background" 
              class="object-cover h-screen w-full md:w-7/12">
         
@@ -26,32 +26,34 @@
                     rounded-lg md:rounded-none shadow-md md:shadow-lg transform md:-translate-y-16">
             
             <div class="w-full md:w-1/2 text-center">
-                <h1 class="text-2xl md:text-3xl font-bold text-blue-500 mb-4">LOGIN</h1>
+                <h1 class="text-2xl md:text-3xl font-bold text-blue-500 mb-4">ADMIN LOGIN</h1>
                 
-                <input type="text" 
-                       name="username" 
-                       placeholder="Username" 
-                       autocomplete="off" 
-                       class="shadow-md border w-full h-12 px-4 mb-3 rounded 
-                              text-orange-500 focus:outline-none focus:border-orange-500 
-                              placeholder-gray-400">
-                
-                <input type="password" 
-                       name="password" 
-                       placeholder="Password" 
-                       autocomplete="off" 
-                       class="shadow-md border w-full h-12 px-4 mb-3 rounded 
-                              text-orange-500 focus:outline-none focus:border-orange-500 
-                              placeholder-gray-400">
-                
-                <button class="bg-gradient-to-r from-orange-500 to-orange-600 
-                               hover:from-orange-600 hover:to-orange-700 
-                               transition-all duration-200 
-                               text-white px-6 py-3 rounded-lg 
-                               shadow-md hover:shadow-lg 
-                               w-full md:w-auto mt-3">
-                    Sign In
-                </button>
+                {% if messages %}
+                    <div class="mb-3 text-red-500">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="POST" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    
+                    <input type="text" name="username" placeholder="Username" autocomplete="off" required 
+                           class="shadow-md border w-full h-12 px-4 mb-3 rounded text-orange-500 focus:outline-none focus:border-orange-500 placeholder-gray-400">
+                    
+                    <input type="password" name="password" placeholder="Password" autocomplete="off" required 
+                           class="shadow-md border w-full h-12 px-4 mb-3 rounded text-orange-500 focus:outline-none focus:border-orange-500 placeholder-gray-400">
+                    
+                    <button type="submit" class="bg-gradient-to-r from-orange-500 to-orange-600 
+                                                   hover:from-orange-600 hover:to-orange-700 
+                                                   transition-all duration-200 
+                                                   text-white px-6 py-3 rounded-lg 
+                                                   shadow-md hover:shadow-lg 
+                                                   w-full md:w-auto mt-3">
+                        Sign In
+                    </button>
+                </form>
             </div>
         </div>
     </div>

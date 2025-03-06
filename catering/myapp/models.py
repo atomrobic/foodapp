@@ -199,11 +199,11 @@ class CateringOrder(models.Model):
     ]
 
     customer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="catering_orders")
-    name = models.CharField(max_length=255, default="Default Name")  # Change as needed1
+    name = models.CharField(max_length=255) # Change as needed1
+    phone = models.CharField(max_length=15, blank=True, null=True)
     event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
     event_date = models.DateField()
     food_items = models.ManyToManyField(FoodItemcatering)  # Linking to the new FoodItem model
-
     photo = models.ImageField(upload_to="order_photos/", null=True, blank=True)
     quantity = models.PositiveIntegerField()
     address = models.TextField(help_text="Event venue or delivery location")  # New field for delivery location

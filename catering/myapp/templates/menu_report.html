@@ -1,36 +1,44 @@
 {% extends "base/admin_base.html" %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-    <h1 class="text-2xl font-bold mb-4">Menu Report</h1>
+<!-- Top Selling Items Section -->
+<div class="mt-6 bg-white shadow-lg rounded-lg p-6 overflow-x-auto">
+    <h2 class="text-xl font-bold mb-4">Top Selling Items</h2>
 
-    <!-- CSV Download Button -->
-    <a href="?download_csv=true" class="bg-green-500 text-white px-4 py-2 rounded-md mb-4 inline-block">
-        Download CSV
-    </a>
+    <!-- Filter Form -->
+    <form method="GET" class="mb-4 flex space-x-4">
+        <select name="filter" class="border rounded px-4 py-2">
+            <option value="monthly" {% if request.GET.filter == "monthly" %}selected{% endif %}>Monthly</option>
+            <option value="yearly" {% if request.GET.filter == "yearly" %}selected{% endif %}>Yearly</option>
+        </select>
+        <input type="month" name="month" class="border rounded px-4 py-2" {% if request.GET.month %}value="{{ request.GET.month }}"{% endif %}>
+        <input type="number" name="year" class="border rounded px-4 py-2" placeholder="Enter Year" {% if request.GET.year %}value="{{ request.GET.year }}"{% endif %}>
+        <button type="submit" class="bg-orange-500 text-white px-4 py-2 rounded">Filter</button>
+    </form>
 
-    <!-- Report Table -->
-    <table class="w-full border-collapse border border-gray-300 mt-4">
+    <table class="w-full border-collapse">
         <thead>
-            <tr class="bg-gray-200">
-                <th class="border px-4 py-2">Category</th>
-                <th class="border px-4 py-2">Menu Item</th>
-                <th class="border px-4 py-2">Price</th>
-                <th class="border px-4 py-2">Availability</th>
+            <tr class="bg-orange-100 text-orange-700">
+                <th class="py-3 px-4 text-left">Item ID</th>
+
+                <th class="py-3 px-4 text-left">Item Name</th>
+                <th class="py-3 px-4 text-left">Total Sold</th>
             </tr>
         </thead>
         <tbody>
-            {% for category in categories %}
-                {% for item in category.menu_items.all %}
-                    <tr>
-                        <td class="border px-4 py-2">{{ category.name }}</td>
-                        <td class="border px-4 py-2">{{ item.name }}</td>
-                        <td class="border px-4 py-2">${{ item.price }}</td>
-                        <td class="border px-4 py-2 {% if item.available %}text-green-500{% else %}text-red-500{% endif %}">
-                            {% if item.available %} Available {% else %} Not Available {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
+            {% for item in top_selling_items %}
+                <tr class="border-t hover:bg-orange-50 transition">
+                    <td class="py-3 px-4">{{ item.menu_item__id }}</td>
+                    <td class="py-3 px-4 whitespace-nowrap">{{ item.menu_item__name }}</td>
+
+                    <td class="py-3 px-4">{{ item.total_sold }}</td>
+                </tr>
+            {% empty %}
+                <tr class="border-t">
+                    <td colspan="4" class="py-4 text-center text-gray-500">
+                        No sales data available
+                    </td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>

@@ -156,24 +156,63 @@
         <h2 class="text-3xl font-bold text-center text-green-600 mb-8">All Categories</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
             {% for category in categories %}
-                <div class="bg-white rounded-lg shadow-md overflow-hidden text-center p-4 transition-transform hover:scale-105">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden text-center p-4 transition-transform hover:scale-105 {% if forloop.last %}special-offer-card{% endif %}">
                     <!-- Category Image -->
                     {% if category.image %}
                         <img src="{{ category.image.url }}" alt="{{ category.name }}" class="w-24 h-24 mx-auto object-cover rounded-full">
                     {% else %}
                         <p class="text-gray-500">No Image Available</p>
                     {% endif %}
+                    
+                    <!-- Offer Badge (only on last card) -->
+                    {% if forloop.last %}
+                    <div class="offer-badge absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full animate-pulse">
+                        20% OFF
+                    </div>
+                    {% endif %}
+
                     <!-- Category Name -->
                     <h3 class="text-lg font-semibold text-gray-800 mt-4">{{ category.name }}</h3>
+                    
                     <!-- More Details Link -->
                     <a href="{% url 'menu_item_detail' category.id %}" class="text-blue-500 hover:text-blue-700 mt-2 inline-block">
                         More Details
                     </a>
+                    
+                    <!-- Special Offer Content (only on last card) -->
+                    {% if forloop.last %}
+                    <div class="offer-content mt-4">
+                        <p class="text-sm text-green-600 font-bold">Limited Time Offer!</p>
+                        <p class="text-xs text-gray-600">Get 20% off on all items in this category</p>
+                    </div>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>
     </div>
 </section>
+
+<style>
+/* Add custom styles for offer card */
+
+.special-offer-card {
+  animation: float 3s ease-in-out infinite;
+  position: relative;
+  border: 2px solid #4CAF50; /* Green border */
+  border-radius: 0.5rem; /* Match existing rounded corners */
+}
+
+.special-offer-card:hover {
+  border-color: #45a049; /* Darker green on hover */
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); /* Matching green shadow */
+}
+
+.offer-badge {
+  animation: pulse 2s infinite;
+}
+
+
+</style>
 
 <!-- Cart Message Container with Tick Icon -->
 <div id="cart-message-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden w-96 p-4 text-center rounded-lg shadow-lg flex items-center justify-center gap-2"></div>
@@ -186,7 +225,9 @@
         {% endfor %}
     </select>
 </div>
-
+<h1 class="text-2xl md:text-3xl font-bold text-center text-gray-900 my-6">
+    Our Menu Categories
+</h1>
 {% for category in categories %}
 {% if category.menu_items.all %}
     <section class="mt-4 bg-cover bg-center bg-no-repeat p-4 rounded-lg shadow-md relative category-section category-{{ category.id }}">
@@ -197,8 +238,14 @@
         <!-- Grid Layout for Menu Items -->
         <div class="relative">
             <!-- Scrollable Container -->
-            <div class="menu-items-container overflow-x-auto sm:overflow-hidden">
-                <div class="flex gap-4 sm:gap-6 transition-transform duration-300 flex-nowrap sm:flex-wrap justify-start" id="menu-items-{{ category.id }}">
+
+                <h3 class="text-lg sm:text-xl font-semibold text-gray-700">{{ category.name }} Items</h3>
+
+                <!-- Category Name Header -->
+              
+
+                <!-- Menu Items Grid -->
+                <div class="flex gap-6 sm:gap-6 transition-transform duration-300 flex-nowrap sm:flex-wrap justify-start" id="menu-items-{{ category.id }}">
                     {% for item in category.menu_items.all %}
                         <div class="min-w-[200px] sm:min-w-[250px] bg-white p-4 rounded-lg shadow hover:shadow-lg transition relative">
                             <a href="{% url 'menu_item_detail' item.id %}" class="block">
@@ -207,10 +254,17 @@
                                 {% else %}
                                     <img src="https://via.placeholder.com/150" alt="No Image" class="w-full h-24 sm:h-32 object-cover rounded-md">
                                 {% endif %}
-                                <h3 class="text-sm sm:text-lg font-semibold mt-2">{{ item.name }}</h3>
-                                <p class="text-gray-600 text-xs sm:text-sm">{{ item.description }}</p>
-                                <p class="text-sm sm:text-lg font-bold text-blue-600 mt-1">₹{{ item.price }}</p>
-                            </a>
+                                
+                                <!-- Item Details -->
+                                <div class="mt-2">
+                                    <h3 class="text-sm sm:text-lg font-semibold">{{ item.name }}</h3>
+                                    <p class="text-gray-600 text-xs sm:text-sm">{{ item.description }}</p>
+                                    <p class="text-sm sm:text-lg font-bold text-blue-600 mt-1">₹{{ item.price }}</p>
+                                    
+                                    <!-- Category Name Tag -->
+                                   
+                                </div>
+                            </a> 
 
                             <!-- Add to Cart Button -->
                             <div class="absolute bottom-2 right-2 opacity-100 transition-opacity duration-300">
