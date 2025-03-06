@@ -230,72 +230,100 @@
 </h1>
 {% for category in categories %}
 {% if category.menu_items.all %}
-    <section class="mt-4 bg-cover bg-center bg-no-repeat p-4 rounded-lg shadow-md relative category-section category-{{ category.id }}">
+    <section class="mt-4 bg-cover bg-center bg-no-repeat p-4 rounded-lg shadow-md relative category-section category-{{ category.id }} aos-init aos-animate" data-aos="fade-up" data-aos-duration="800">
         <div class="bg-gray-200 p-6 rounded-lg shadow-lg">
             <h2 class="text-xl md:text-2xl font-bold text-gray-800" data-aos="fade-in">{{ category.name }}</h2>
         </div>
 
         <!-- Grid Layout for Menu Items -->
         <div class="relative">
-            <!-- Scrollable Container -->
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-700" data-aos="fade-in" data-aos-delay="500">{{ category.name }} Items</h3>
 
-                <h3 class="text-lg sm:text-xl font-semibold text-gray-700">{{ category.name }} Items</h3>
-
-                <!-- Category Name Header -->
-              
-
-                <!-- Menu Items Grid -->
-                <div class="flex gap-6 sm:gap-6 transition-transform duration-300 flex-nowrap sm:flex-wrap justify-start" id="menu-items-{{ category.id }}">
-                    {% for item in category.menu_items.all %}
-                        <div class="min-w-[200px] sm:min-w-[250px] bg-white p-4 rounded-lg shadow hover:shadow-lg transition relative">
-                            <a href="{% url 'menu_item_detail' item.id %}" class="block">
-                                {% if item.image %}
-                                    <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-24 sm:h-32 object-cover rounded-md">
-                                {% else %}
-                                    <img src="https://via.placeholder.com/150" alt="No Image" class="w-full h-24 sm:h-32 object-cover rounded-md">
-                                {% endif %}
-                                
-                                <!-- Item Details -->
-                                <div class="mt-2">
-                                    <h3 class="text-sm sm:text-lg font-semibold">{{ item.name }}</h3>
-                                    <p class="text-gray-600 text-xs sm:text-sm">{{ item.description }}</p>
-                                    <p class="text-sm sm:text-lg font-bold text-blue-600 mt-1">₹{{ item.price }}</p>
-                                    
-                                    <!-- Category Name Tag -->
-                                   
-                                </div>
-                            </a> 
-
-                            <!-- Add to Cart Button -->
-                            <div class="absolute bottom-2 right-2 opacity-100 transition-opacity duration-300">
-                                <form class="add-to-cart-form" data-id="{{ item.id }}">
-                                    {% csrf_token %}
-                                    <button type="button" class="add-to-cart-btn bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 sm:px-3 rounded-lg text-xs sm:text-sm">
-                                        Add to Cart
-                                    </button>
-                                </form>
+            <!-- Menu Items Grid (Fixed Right Gap + Parallax + Fade-in) -->
+            <div class="flex flex-wrap gap-6 sm:gap-6 transition-transform duration-300 justify-start mx-auto pr-6 parallax-container" id="menu-items-{{ category.id }}">
+                {% for item in category.menu_items.all %}
+                    <div class="w-[200px] sm:w-[250px] bg-white p-4 rounded-lg shadow hover:shadow-lg transition relative aos-init aos-animate" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:1 }}00">
+                        <a href="{% url 'menu_item_detail' item.id %}" class="block">
+                            {% if item.image %}
+                                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-24 sm:h-32 object-cover rounded-md">
+                            {% else %}
+                                <img src="https://via.placeholder.com/150" alt="No Image" class="w-full h-24 sm:h-32 object-cover rounded-md">
+                            {% endif %}
+                            
+                            <!-- Item Details -->
+                            <div class="mt-2">
+                                <h3 class="text-sm sm:text-lg font-semibold">{{ item.name }}</h3>
+                                <p class="text-gray-600 text-xs sm:text-sm">{{ item.description }}</p>
+                                <p class="text-sm sm:text-lg font-bold text-blue-600 mt-1">₹{{ item.price }}</p>
                             </div>
+                        </a> 
+
+                        <!-- Add to Cart Button -->
+                        <div class="absolute bottom-2 right-2 opacity-100 transition-opacity duration-300">
+                            <form class="add-to-cart-form" data-id="{{ item.id }}">
+                                {% csrf_token %}
+                                <button type="button" class="add-to-cart-btn bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 sm:px-3 rounded-lg text-xs sm:text-sm">
+                                    Add to Cart
+                                </button>
+                            </form>
                         </div>
-                    {% endfor %}
-                </div>
+                    </div>
+                {% endfor %}
             </div>
         </div>
     </section>
 {% endif %}
 {% endfor %}
-
+<style>
+    .parallax-container {
+        background-attachment: fixed;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+    .category-section {
+        transition: opacity 0.5s ease-in-out;
+        opacity: 1;
+    }
+    
+    .category-section.fade-in {
+        opacity: 0;
+        animation: fadeIn 0.5s forwards;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+<script>
+    AOS.init();
+</script>
 <!-- JavaScript for Filtering -->
 <script>
-    document.getElementById("category-filter").addEventListener("change", function() {
-        let selectedCategory = this.value;
-        let sections = document.querySelectorAll(".category-section");
+    document.addEventListener("DOMContentLoaded", function () {
+        const categoryFilter = document.getElementById("category-filter");
+        const categorySections = document.querySelectorAll(".category-section");
 
-        sections.forEach(section => {
-            if (selectedCategory === "all") {
-                section.style.display = "block";
-            } else {
-                section.style.display = section.classList.contains(selectedCategory) ? "block" : "none";
-            }
+        categoryFilter.addEventListener("change", function () {
+            const selectedCategory = this.value;
+
+            categorySections.forEach(section => {
+                if (selectedCategory === "all" || section.classList.contains(`category-${selectedCategory.split('-')[1]}`)) {
+                    section.style.display = "block"; // Show the selected category
+                    section.classList.add("fade-in"); // Add fade-in effect
+                } else {
+                    section.style.display = "none"; // Hide other categories
+                }
+            });
         });
     });
 </script>
@@ -316,6 +344,25 @@
         <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Send</button>
     </form>
 </section>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const categoryFilter = document.getElementById("category-filter");
+
+        categoryFilter.addEventListener("change", function () {
+            const selectedCategory = this.value;
+            const categorySections = document.querySelectorAll(".category-section");
+
+            categorySections.forEach(section => {
+                if (selectedCategory === "all" || section.classList.contains(selectedCategory)) {
+                    section.style.display = "block"; // Show matching categories
+                } else {
+                    section.style.display = "none"; // Hide non-matching categories
+                }
+            });
+        });
+    });
+</script>
+
 <script>
  // Function to handle menu scrolling
 

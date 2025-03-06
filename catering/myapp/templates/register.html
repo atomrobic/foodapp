@@ -7,13 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="flex justify-center items-center min-h-[80vh] bg-orange-100 p-4" style="font-family: 'Poppins', sans-serif;">
+<body class="flex justify-center items-center min-h-[100vh] bg-orange-100 p-4" style="font-family: 'Poppins', sans-serif;">
 
     <!-- Registration Container -->
     <div class="w-full max-w-4xl flex flex-wrap bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
         
         <!-- Left Side - Carousel -->
-        <div class="w-full md:w-1/2 h-80 md:h-auto relative overflow-hidden">
+        <div class="w-full md:w-1/2 h-100 md:h-auto relative overflow-hidden">
             <div class="carousel relative w-full h-full">
                 <div class="carousel-inner w-full h-full relative">
                     <div class="carousel-item absolute inset-0 bg-cover bg-center opacity-100 transition-opacity duration-1000"
@@ -111,7 +111,7 @@
                         if (this.value === "admin") {
                             const confirmRedirect = confirm("Are you sure you want to register as an Admin?");
                             if (confirmRedirect) {
-                                window.location.href = "/adminlogin";  
+                                window.location.href = "/adminlogin/";  
                             } else {
                                 this.value = "customer";  // Reset to customer if canceled
                             }

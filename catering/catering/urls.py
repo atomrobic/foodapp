@@ -21,6 +21,7 @@ urlpatterns = [
 
     # Catering order management URLs
     path("place-order/", place_catering_order, name="place_catering_order"),  # Place a catering order
+    
     path("adminorders/", order_list, name="admin_catering_orders"),  # List of all orders for admin
     path('update-order-status/<int:order_id>/', update_order_status, name='update_order_status'),  # Update order status (admin)
     path('admindashboard/', dashboard_view, name='dashboard'),  # Admin dashboard view

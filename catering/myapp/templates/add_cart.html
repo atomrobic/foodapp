@@ -58,134 +58,110 @@
             </div>
 
            <!-- Address Selection -->
-<div class="bg-white p-6 rounded-lg shadow-lg">
-    <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold">Select Delivery Address</h2>
-        <!-- "Add New Address" Button -->
-        <button onclick="toggleAddressForm()" class="bg-blue-500 text-white px-4 py-2 rounded">
-            + Add New Address
-        </button>
-    </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">Select Delivery Address</h2>
+                    <button onclick="toggleAddressForm()" class="bg-blue-500 text-white px-4 py-2 rounded">
+                        + Add New Address
+                    </button>
+                </div>
 
-    <form method="POST" action="{% url 'checkout' %}">
-        {% csrf_token %}
-        <div class="grid gap-4 md:grid-cols-2">
-            {% for address in addresses %}
-                <label class="border rounded-lg p-4 bg-gray-50 flex items-center cursor-pointer">
-                    <input type="radio" name="selected_address" value="{{ address.id }}" class="mr-3" {% if forloop.first %}checked{% endif %}>
-                    <div>
-                        <p class="font-semibold">{{ address.full_name }}</p>
-                        <p class="text-gray-600">{{ address.address }}, {{ address.city }}, {{ address.zipcode }}</p>
-                        <p class="text-gray-600">Phone: {{ address.phone }}</p>
+                <form method="POST" action="{% url 'checkout' %}">
+                    {% csrf_token %}
+                    <div class="grid gap-4 md:grid-cols-2">
+                        {% for address in addresses %}
+                            <label class="border rounded-lg p-4 bg-gray-50 flex items-center cursor-pointer">
+                                <input type="radio" name="selected_address" value="{{ address.id }}" class="mr-3" {% if forloop.first %}checked{% endif %}>
+                                <div>
+                                    <p class="font-semibold">{{ address.full_name }}</p>
+                                    <p class="text-gray-600">{{ address.address }}, {{ address.city }}, {{ address.zipcode }}</p>
+                                    <p class="text-gray-600">Phone: {{ address.phone }}</p>
+                                </div>
+                            </label>
+                        {% empty %}
+                            <p class="text-gray-600">No addresses found. Add a new address below.</p>
+                        {% endfor %}
                     </div>
-                </label>
-            {% empty %}
-                <p class="text-gray-600">No addresses found. Add a new address below.</p>
-            {% endfor %}
+
+                    <button type="submit" class="mt-4 px-4 py-2 bg-green-500 text-white rounded-md w-full">
+                        Proceed to Checkout
+                    </button>
+                </form>
+            </div>
+
+            <!-- Add New Address Form (Hidden by Default) -->
+            <div id="new-address-form" class="hidden mt-6 bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-bold mb-4">Add a New Address</h2>
+                <form id="addressFormCart" method="POST" action="{% url 'save_address' %}">
+                    {% csrf_token %}
+                    <input type="text" name="full_name" placeholder="Full Name" required class="border p-2 w-full mb-2">
+                    <input type="text" name="address" placeholder="Address" required class="border p-2 w-full mb-2">
+                    <input type="text" name="city" placeholder="City" required class="border p-2 w-full mb-2">
+                    <input type="text" name="country" placeholder="Country" required class="border p-2 w-full mb-2">
+                    <input type="text" name="zipcode" placeholder="Zip Code" required class="border p-2 w-full mb-2">
+                    <input type="text" name="phone" placeholder="Phone Number" required class="border p-2 w-full mb-2">
+                    
+                    <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Save Address</button>
+                </form>
+            </div>
         </div>
-
-        <button type="submit" class="mt-4 px-4 py-2 bg-green-500 text-white rounded-md w-full">
-            Proceed to Checkout
-        </button>
-    </form>
-</div>
-
-<!-- Add New Address Form (Hidden by Default) -->
-<div id="new-address-form" class="hidden mt-6 bg-white p-6 rounded-lg shadow-lg">
-    <h2 class="text-xl font-bold mb-4">Add a New Address</h2>
-    <form id="addressFormCart" method="POST" action="{% url 'save_address' %}">
-        {% csrf_token %}
-        <input type="hidden" name="id" id="cart_address_id"> <!-- Hidden field for edit -->
-        <input type="hidden" name="next" value="cart">  <!-- Redirects back to Cart -->
-    
-        <input type="text" name="full_name" placeholder="Full Name" required class="border p-2 w-full mb-2">
-        <input type="text" name="address" placeholder="Address" required class="border p-2 w-full mb-2">
-        <input type="text" name="city" placeholder="City" required class="border p-2 w-full mb-2">
-        <input type="text" name="country" placeholder="Country" required class="border p-2 w-full mb-2">
-        <input type="text" name="zipcode" placeholder="Zip Code" required class="border p-2 w-full mb-2">
-        <input type="text" name="phone" placeholder="Phone Number" required class="border p-2 w-full mb-2">
-        
-        <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Save Address</button>
-    </form>
-    
+    {% else %}
+        <p class="text-gray-600">Your cart is empty.</p>
+    {% endif %}
 </div>
 
 <!-- JavaScript to Show/Hide Address Form -->
 <script>
     function toggleAddressForm() {
-        let form = document.getElementById("new-address-form");
-        form.classList.toggle("hidden");  // Show or hide the form when button is clicked
+        document.getElementById("new-address-form").classList.toggle("hidden");
     }
-</script>
 
-    {% else %}
-        <!-- Empty Cart Message -->
-        <div class="flex flex-col items-center">
-            <img src="https://img.freepik.com/free-vector/supermarket-shopping-cart-concept-illustration_114360-22408.jpg?t=st=1741067254~exp=1741070854~hmac=c985f48b129a76c3572908b2a20a1be42515bfe4451bd650adcf02c594eecfa2&w=1060" 
-                 alt="Empty Cart" class="w-32 h-32 mb-4">
-            <p class="text-gray-600">"Nothing to see here... yet! Add some goodies to your cart."</p>
-        </div>
-    {% endif %}
-</div>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("addressFormCart").addEventListener("submit", function (event) {
+            event.preventDefault();
 
-<!-- JavaScript for Quantity Update -->
-<script>
+            let formData = new FormData(this);
+
+            fetch("{% url 'save_address' %}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Address saved successfully!");
+                    location.reload();
+                } else {
+                    alert("Failed to save address. Please check your inputs.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Something went wrong! Please try again.");
+            });
+        });
+    });
     function updateQuantity(itemId, change) {
         let quantityInput = document.getElementById(`quantity-${itemId}`);
         let quantityDisplay = document.getElementById(`quantity-display-${itemId}`);
         let submitButton = document.getElementById(`submit-${itemId}`);
 
-        let currentQuantity = parseInt(quantityInput.value);
-        let newQuantity = currentQuantity + change;
+        let newQuantity = parseInt(quantityInput.value) + change;
 
-        if (newQuantity >= 1) {
-            quantityInput.value = newQuantity;
-            quantityDisplay.textContent = newQuantity;
-            submitButton.click();
+        if (newQuantity < 1) {
+            newQuantity = 1; // Prevent quantity from being less than 1
         }
+
+        quantityInput.value = newQuantity;
+        quantityDisplay.textContent = newQuantity;
+        
+        // Automatically submit the form to update the quantity in the backend
+        submitButton.click();
     }
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            document.querySelectorAll("form").forEach(form => {
-                form.addEventListener("submit", function(event) {
-                    event.preventDefault();  // Prevent full-page reload
-        
-                    let formData = new FormData(this);
-                    let nextPage = formData.get("next");  // Get whether it's 'profile' or 'cart'
-        
-                    fetch("{% url 'save_address' %}", {
-                        method: "POST",
-                        body: formData,
-                        headers: {
-                            "X-Requested-With": "XMLHttpRequest",
-                            "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert("Address saved successfully!");
-        
-                            // Get the appropriate address list section
-                            let addressContainer = document.getElementById(nextPage + "AddressList");
-                            let newAddress = `
-                                <div class="p-4 border rounded-lg mb-2">
-                                    <p><strong>${data.address.full_name}</strong></p>
-                                    <p>${data.address.address}, ${data.address.city}, ${data.address.zipcode}</p>
-                                    <p>Phone: ${data.address.phone}</p>
-                                </div>`;
-        
-                            addressContainer.innerHTML += newAddress;
-                        } else {
-                            alert("Error saving address!");
-                        }
-                    })
-                    .catch(error => console.error("Error:", error));
-                });
-            });
-        });
-        </script>
-        
 </script>
 
 {% endblock %}

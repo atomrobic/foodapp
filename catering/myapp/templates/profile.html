@@ -147,6 +147,17 @@
     {% empty %}
         <p>No recent orders available.</p>
     {% endfor %}
+    <h2>Order Details</h2>
+    <p>Order ID: {{ order.id }}</p>
+    <p>Customer: {{ order.customer.username }}</p>
+    <p>Items:</p>
+    <ul>
+        {% for item in order.FoodItemcatering.all %}
+            <li>{{ item.name }}</li>
+        {% endfor %}
+    </ul>
+    
+    
 </div>
 <script>
 document.addEventListener("DOMContentLoaded", function () {

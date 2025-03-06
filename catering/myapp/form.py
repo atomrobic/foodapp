@@ -18,7 +18,7 @@ class CateringOrderForm(forms.ModelForm):
         label="Full Name"
     )
 
-    phone_number = forms.CharField(
+    phone = forms.CharField(
         widget=forms.TextInput(attrs={
             "class": "w-full p-2 border rounded-md focus:ring focus:ring-orange-300",
             "placeholder": "Enter Your Phone Number"
@@ -26,7 +26,7 @@ class CateringOrderForm(forms.ModelForm):
         label="Phone Number"
     )
 
-    menu_items = forms.ModelMultipleChoiceField(
+    FoodItemcatering = forms.ModelMultipleChoiceField(
         queryset=FoodItemcatering.objects.filter(is_available=True),
         widget=forms.CheckboxSelectMultiple(attrs={
             "class": "space-y-2 p-2 border rounded-md focus:ring focus:ring-orange-300"
@@ -72,7 +72,7 @@ class CateringOrderForm(forms.ModelForm):
 
     class Meta:
         model = CateringOrder
-        fields = ["name", "phone_number", "event_type", "event_date", "quantity", "menu_items", "address", "special_requests"]
+        fields = ["name", "phone", "event_type", "event_date", "quantity", "FoodItemcatering", "address", "special_requests"]
 
 
 from django import forms

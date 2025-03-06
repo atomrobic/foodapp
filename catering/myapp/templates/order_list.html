@@ -112,32 +112,18 @@
                     {% for order in orders %}
                         {% if order.order_category == "catering" %}
                         <tr class="hover:bg-gray-100 transition">
+                            <td class="border border-gray-300 px-4 py-2 text-center">{{ order.name }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">{{ order.phone }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">{{ order.event_type }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">{{ order.event_date|date:"Y-m-d" }}</td>
                             <td class="border border-gray-300 px-4 py-2 text-center">
-                                {{ order.name }}
-                            </td>
-                            <td class="border border-gray-300 px-4 py-2 text-center">
-                                {{ order.phone }}
-                            </td>
-                            <td class="border border-gray-300 px-4 py-2 text-center">
-                                {{ order.event_type }}
-                            </td>
-                            <td class="border border-gray-300 px-4 py-2 text-center">
-                                {{ order.event_date|date:"Y-m-d" }}
-                            </td>
-                            <td class="border border-gray-300 px-4 py-2 text-center">
-                                {% for item in order.menu_items.all %}
+                                {% for item in order.FoodItemcatering.all %}
                                     {{ item.name }}{% if not forloop.last %}, {% endif %}
                                 {% endfor %}
                             </td>
-                            <td class="border border-gray-300 px-4 py-2 text-center">
-                                {{ order.quantity }}
-                            </td>
-                            <td class="border border-gray-300 px-4 py-2 text-center">
-                                ${{ order.total_price|default:"0.00" }}
-                            </td>
-                            <td class="border border-gray-300 px-4 py-2 text-center">
-                                {{ order.special_requests|default:"None" }}
-                            </td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">{{ order.quantity }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">${{ order.total_price|default:"0.00" }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">{{ order.special_requests|default:"None" }}</td>
                             <td class="border border-gray-300 px-4 py-2 text-center">
                                 <form method="POST" action="{% url 'update_order_status' order.id %}">
                                     {% csrf_token %}
@@ -150,11 +136,36 @@
                                 </form>
                             </td>
                             <td class="border border-gray-300 px-4 py-2 text-center">
-                                <button class="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition">
-                                    Update
+                                <button onclick="openModal('{{ order.id }}')" class="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition">
+                                    View
                                 </button>
                             </td>
                         </tr>
+
+                        <!-- Order Details Modal -->
+                        <div id="modal-{{ order.id }}" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
+                            <div class="bg-white rounded-lg shadow-lg w-96 p-6">
+                                <h2 class="text-lg font-semibold text-gray-800 mb-4">Order Details</h2>
+                                <p><strong>Customer Name:</strong> {{ order.name }}</p>
+                                <p><strong>Phone:</strong> {{ order.phone }}</p>
+                                <p><strong>Event Type:</strong> {{ order.event_type }}</p>
+                                <p><strong>Event Date:</strong> {{ order.event_date|date:"Y-m-d" }}</p>
+                                <p><strong>Ordered Items:</strong> 
+                                    {% for item in order.menu_items.all %}
+                                        {{ item.name }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </p>
+                                <p><strong>Quantity:</strong> {{ order.quantity }}</p>
+                                <p><strong>Total Price:</strong> ${{ order.total_price|default:"0.00" }}</p>
+                                <p><strong>Special Requests:</strong> {{ order.special_requests|default:"None" }}</p>
+                                <p><strong>Status:</strong> {{ order.status }}</p>
+
+                                <!-- Close Button -->
+                                <button onclick="closeModal('{{ order.id }}')" class="mt-4 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
                         {% endif %}
                     {% empty %}
                     <tr>
@@ -166,6 +177,17 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript to Handle Modal -->
+<script>
+    function openModal(orderId) {
+        document.getElementById(`modal-${orderId}`).classList.remove("hidden");
+    }
+
+    function closeModal(orderId) {
+        document.getElementById(`modal-${orderId}`).classList.add("hidden");
+    }
+</script>
 
 <script defer>
     // JavaScript for filtering orders

@@ -30,14 +30,13 @@ from .form import (
 # Get the custom user model
 CustomUser = get_user_model()
 
-
 def register(request):
     if request.method == "POST":
         username = request.POST.get("username")
         email = request.POST.get("email")
         password = request.POST.get("password")
         confirm_password = request.POST.get("confirm_password")
-        phone = request.POST.get("phone", "")  # Get phone number from form
+        phone = request.POST.get("phone", "")
 
         if password != confirm_password:
             messages.error(request, "Passwords do not match.")
@@ -57,8 +56,8 @@ def register(request):
                 username=username, email=email, password=password
             )
 
-            # Create Customer entry
-            Customer.objects.create(user=user, phone=phone)
+            # Ensure a Customer entry is created only if it doesn't exist
+            customer, created = Customer.objects.get_or_create(user=user, defaults={"phone": phone})
 
             # Authenticate and log in the user
             user = authenticate(request, username=username, password=password)
@@ -75,18 +74,24 @@ def register(request):
     return render(request, "register.html")
 
 
+from django.db.models import Count, Sum
+
 def dashboard_view(request):
-    total_users = CustomUser.objects.count()  # Count total users
-    total_orders = Order.objects.count()  # Count total orders
-    catering_orders = Order.objects.filter(order_type="catering").count()  # Filter catering orders
-    total_amount = Order.objects.aggregate(Sum('total_price'))['total_price__sum'] or 0  # Sum total amount
+    total_users = CustomUser.objects.count()  # Total registered users
+    total_orders = Order.objects.count()  # Total orders
+    catering_orders = Order.objects.filter(order_type="catering").count()  # Catering orders
+    total_amount = Order.objects.aggregate(Sum('total_price'))['total_price__sum'] or 0  # Total revenue
+
+    # ✅ Get the count of unique consumers who placed orders
+    total_consumers = Order.objects.values('customer').distinct().count()
 
     context = {
         "total_users": total_users,
         "total_orders": total_orders,
-        "catering_orders": catering_orders,  # ✅ Added catering_orders to context
+        "catering_orders": catering_orders,
         "total_amount": total_amount,
-        "avg_time_spent": "15 min",  # Example value, replace with actual logic
+        "total_consumers": total_consumers,  # ✅ Correct variable
+        "avg_time_spent": "15 min",  # Example value
     }
     return render(request, "admin_panel.html", context)
 
@@ -135,7 +140,7 @@ def user_login(request):
     if user_type == "admin":
         return render(request, "admin_login.html")  
     else:
-        return render(request, "admin_login.html")
+        return render(request, "login.html")
 
 
 from django.shortcuts import render
@@ -162,13 +167,16 @@ def customer_detail(request):
 
 
 
-@login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import CateringOrder
+from .form import CateringOrderForm
 def place_catering_order(request):
     if request.method == "POST":
         form = CateringOrderForm(request.POST)
         if form.is_valid():
             order = form.save(commit=False)
-            order.customer = request.user  # Assign the logged-in user
+            order.customer = request.user  # Assign the logged-in userorder
             order.save()
             form.save_m2m()  # Save ManyToMany field (menu_items)
             return redirect("catering_home")  # Redirect to home page after order
@@ -176,6 +184,7 @@ def place_catering_order(request):
         form = CateringOrderForm()
 
     return render(request, "catering_order.html", {"form": form})
+
 
 def is_admin(user):
     return user.is_authenticated and user.is_staff  # ✅ Only allow admin users
@@ -209,6 +218,13 @@ def update_order_status(request, order_id):
 
 def is_admin(user):
     return user.is_authenticated and user.is_staff  # ✅ Only allow admin users
+
+def create_customer(user):
+    # Check if a Customer already exists for the user
+    if not Customer.objects.filter(user=user).exists():
+        Customer.objects.create(user=user)
+    else:
+        print(f"Customer profile already exists for {user.username}")
 
 @login_required
 @user_passes_test(is_admin)
@@ -248,6 +264,7 @@ def cancel_order(request, order_id):
         messages.error(request, "Cancellation period expired.")
 
     return redirect("user_dashboard")  # Redirect back to the orders page
+
 
 def menu_items_view(request):
     """View to display menu items with photos and prices"""

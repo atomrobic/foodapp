@@ -72,11 +72,17 @@
                 <span class="text-gray-100">{{ user.username }}</span>
                 <div class="flex items-center">
                     <span class="text-sm text-gray-300">Online</span>
+                    
                     <span class="status-indicator online"></span>
+                    
+                    
                 </div>
+                
             </div>
         </div>
-
+        <a href="{% url 'logout' %}" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+            Logout
+        </a>
         <nav class="mt-4">
             <ul class="sidebar-nav">
                 <li class="mb-2"><a href="{% url 'dashboard'%}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700">
@@ -96,7 +102,7 @@
                     Report
                 </a></li>
                 <li class="mb-2"><a href="{% url 'admin_dashboard' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700">
-                    <span class="mr-2"></span>
+                    <span class="mr-2">💰</span>
                     status
                 </a></li>
             </ul>
@@ -109,7 +115,7 @@
             <div class="header-logo">
                 <img src="{% static 'images/download.png' %}" alt="Profile Picture" class="w-14 h-14  border-2 border-black-400">
 
-                <span class="ml-2 text-xl font-bold">Pluto Dashboard</span>
+                <span class="ml-2 text-xl font-bold">Admin Dashboard</span>
             </div>
              <!-- Notification Bell -->
     <div class="relative">

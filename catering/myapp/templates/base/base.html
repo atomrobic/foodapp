@@ -24,7 +24,7 @@
 <body class="bg-gray-100 font-sans">
 
     <!-- Navbar -->
-    <header class="bg-white shadow-md navbar">
+    <header class="bg-white shadow-md navbar fixed top-0 left-0 w-full transition-all duration-300">
         <nav class="container mx-auto px-4 py-4">
             <!-- Desktop Header -->
             <div class="hidden md:flex justify-between items-center">
@@ -167,7 +167,6 @@
 
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<script>
     $(document).ready(function () {
         // Function to update the cart count
         function updateCartCount() {
@@ -208,7 +207,16 @@
             });
         });
     });
-</script>
+    $(document).ready(function () {
+        $(window).scroll(function () {
+            if ($(this).scrollTop() > 50) {
+                $(".navbar").addClass("shadow-lg bg-white");
+            } else {
+                $(".navbar").removeClass("shadow-lg bg-white");
+            }
+        });
+    });
+    
     </script>
 </body>
 </html>
