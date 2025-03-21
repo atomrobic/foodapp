@@ -511,9 +511,16 @@ def add_to_cart(request, item_id):
         cart_item.quantity += 1
         cart_item.save()
 
-    messages.success(request, f"{menu_item.name} added to cart!")
+    message = f"{menu_item.name} added to cart!"
+    messages.success(request, message)
 
-    return JsonResponse({"success": True, "message": f"{menu_item.name} added to cart!"})
+    return JsonResponse({"success": True, "message": message})
+
+def cart_count(request):
+    """Return the total number of items in the user's cart."""
+    cart_items = CartItem.objects.filter(cart__customer=request.user)
+    total_count = sum(item.quantity for item in cart_items)  # Sum all item quantities
+    return JsonResponse({"count": total_count})
 
 @login_required
 def checkout(request):

@@ -26,13 +26,19 @@ class CustomUser(AbstractUser):
         return f"{self.username} ({self.role})"
 
 class Customer(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE , unique=True ,related_name="customer_profile")
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="customer_profile")
     created_at = models.DateTimeField(auto_now_add=True)
     phone = models.CharField(max_length=15, blank=True, null=True)  # Phone number
     total_spent = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Track total spending
     
     
-   
+    def update_total_spent(self):
+        """Recalculate and update total spending from related orders."""
+        from myapp.models import Order  # Import here to avoid circular imports
+        total = Order.objects.filter(customer=self.user).aggregate(total=models.Sum("total_price"))["total"] or 0
+        print(total)
+        self.total_spent = total
+        self.save()
     
     def __str__(self):
         return f"{self.user.email} - {self.phone if self.phone else 'No Phone'} - ${self.total_spent}"

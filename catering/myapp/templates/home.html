@@ -224,6 +224,9 @@
             <option value="category-{{ category.id }}">{{ category.name }}</option>
         {% endfor %}
     </select>
+    <!-- Floating Cart Message -->
+<div id="cart-message" class="cart-message hidden"></div>
+
 </div>
 <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-900 my-6">
     Our Menu Categories
@@ -364,53 +367,57 @@
 </script>
 
 <script>
- // Function to handle menu scrolling
-
     document.addEventListener("DOMContentLoaded", function () {
         /**
-         * Function to retrieve CSRF token from the HTML form.
-         * Used for making secure AJAX requests.
+         * Utility Function to Retrieve CSRF Token
          */
         function getCSRFToken() {
-            return document.querySelector('[name=csrfmiddlewaretoken]').value;
+            return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
         }
     
         /**
-         * Event listener for "Add to Cart" buttons.
-         * Sends an AJAX request to add an item to the cart.
+         * Add to Cart Functionality
          */
-        document.querySelectorAll(".add-to-cart-btn").forEach(button => {
-            button.addEventListener("click", function () {
-                let form = this.closest(".add-to-cart-form");
-                let itemId = form.getAttribute("data-id");
+        function setupAddToCart() {
+            document.querySelectorAll(".add-to-cart-btn").forEach(button => {
+                button.addEventListener("click", function (event) {
+                    event.preventDefault(); // Prevent default form submission
     
-                fetch(`/cart/add/${itemId}/`, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": getCSRFToken(),
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({})
-                })
-                .then(response => response.json())
-                .then(data => {
-                    showMessage(data.message, "success");
-                    updateCartCount();
-                })
-                .catch(error => {
-                    showMessage("Error adding item!", "error");
-                    console.error("Error:", error);
+                    const form = this.closest(".add-to-cart-form");
+                    const itemId = form.getAttribute("data-id");
+    
+                    fetch(`/cart/add/${itemId}/`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": getCSRFToken(),
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error("Network response was not ok");
+                        return response.json();
+                    })
+                    .then(data => {
+                        showMessage(data.message, "success");
+                        updateCartCount();
+                    })
+                    .catch(error => {
+                        showMessage("Error adding item!", "error");
+                        console.error("Error:", error);
+                    });
                 });
             });
-        });
+        }
     
         /**
-         * Function to display a success or error message.
-         * The message disappears after 3 seconds.
+         * Display Success/Error Messages
          */
         function showMessage(message, type = "success") {
-            let messageContainer = document.getElementById("cart-message-container");
-            
+            const messageContainer = document.getElementById("cart-message-container");
+    
+            if (!messageContainer) return;
+    
             messageContainer.className = `fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-96 p-4 text-center rounded-lg shadow-lg ${
                 type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
             }`;
@@ -422,119 +429,134 @@
                 messageContainer.classList.add("hidden");
             }, 3000);
         }
-    
+        function showCartMessage(message) {
+            const cartMessage = document.getElementById("cart-message");
+            cartMessage.innerText = message;
+            cartMessage.style.display = "block";
+        
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                cartMessage.style.display = "none";
+            }, 3000);
+        }
+        
         /**
-         * Function to update the cart item count dynamically.
+         * Update Cart Item Count Dynamically
          */
-        function updateCartCount() {
+         function updateCartCount() {
             fetch("/cart/count/")
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error("Network response was not ok");
+                    return response.json();
+                })
                 .then(data => {
-                    let cartCountElement = document.getElementById("cart-count");
+                    const cartCountElement = document.getElementById("cart-count");
                     if (cartCountElement) {
-                        cartCountElement.innerText = data.count;
+                        cartCountElement.innerText = data.count || 0;
                     }
                 })
                 .catch(error => console.error("Error updating cart count:", error));
         }
-    });
+        
     
-    /**
-     * Automatic scrolling for the banner carousel.
-     * Stops on mouse hover and resumes on mouse leave.
-     */
-    document.addEventListener("DOMContentLoaded", function () {
-        const bannerCarousel = document.querySelector("#banner-carousel .overflow-x-auto");
-        let isUserScrolling = false;
+        /**
+         * Automatic Scrolling for Banner Carousel
+         */
+        function setupBannerCarousel() {
+            const bannerCarousel = document.querySelector("#banner-carousel .overflow-x-auto");
+            if (!bannerCarousel) return;
     
-        if (!bannerCarousel) return;
+            let isUserScrolling = false;
+            let interval = setInterval(autoScroll, 4000);
     
-        function autoScroll() {
-            if (!isUserScrolling) {
-                bannerCarousel.scrollBy({ left: bannerCarousel.clientWidth, behavior: "smooth" });
+            function autoScroll() {
+                if (!isUserScrolling) {
+                    bannerCarousel.scrollBy({ left: bannerCarousel.clientWidth, behavior: "smooth" });
+                }
             }
-        }
     
-        let interval = setInterval(autoScroll, 4000);
+            bannerCarousel.addEventListener("mouseover", () => {
+                isUserScrolling = true;
+                clearInterval(interval);
+            });
     
-        bannerCarousel.addEventListener("mouseover", () => {
-            isUserScrolling = true;
-            clearInterval(interval);
-        });
-    
-        bannerCarousel.addEventListener("mouseleave", () => {
-            isUserScrolling = false;
-            interval = setInterval(autoScroll, 4000);
-        });
-    });
-    
-    /**
-     * Parallax scrolling effect for carousel images.
-     */
-    document.addEventListener("DOMContentLoaded", function () {
-        const track = document.getElementById("carousel-track");
-        const slides = document.querySelectorAll(".parallax-slide .parallax-bg");
-    
-        function applyParallax() {
-            slides.forEach((slide, index) => {
-                let offset = track.scrollLeft / track.clientWidth - index;
-                slide.style.transform = `translateY(${offset * 20}px)`;
+            bannerCarousel.addEventListener("mouseleave", () => {
+                isUserScrolling = false;
+                interval = setInterval(autoScroll, 4000);
             });
         }
     
-        track.addEventListener("scroll", applyParallax);
-    });
+        /**
+         * Parallax Scrolling Effect for Carousel Images
+         */
+        function setupParallaxEffect() {
+            const track = document.getElementById("carousel-track");
+            const slides = document.querySelectorAll(".parallax-slide .parallax-bg");
     
-    /**
-     * Smooth menu item fade-in animation using GSAP.
-     */
-  
+            if (!track || !slides.length) return;
     
-    /**
-     * Function to filter menu items based on category selection.
-     */
-    function filterMenu(category) {
-        let items = document.querySelectorAll(".menu-item");
-        let menuTitle = document.getElementById("menuTitle");
-    
-        items.forEach(item => {
-            let itemCategory = item.getAttribute("data-category");
-            if (category === "all" || itemCategory === category) {
-                item.style.display = "block";
-            } else {
-                item.style.display = "none";
+            function applyParallax() {
+                slides.forEach((slide, index) => {
+                    const offset = track.scrollLeft / track.clientWidth - index;
+                    slide.style.transform = `translateY(${offset * 20}px)`;
+                });
             }
-        });
     
-        menuTitle.innerText = category === "all" ? "All Menu Items" : `${category} Menu`;
-    }
-    
-    /**
-     * Initialize AOS (Animate on Scroll) for smooth animations.
-     */
-  
-    /**
-     * Function to cycle through menu items every few seconds.
-     */
-    document.addEventListener("DOMContentLoaded", function () {
-        let items = document.querySelectorAll(".menu-item");
-        let index = 0;
-        const totalItems = items.length;
-        const itemsToShow = 4;
-    
-        function showItems() {
-            items.forEach(item => item.classList.remove("active"));
-            for (let i = 0; i < itemsToShow; i++) {
-                let itemIndex = (index + i) % totalItems;
-                items[itemIndex].classList.add("active");
-            }
-            index = (index + itemsToShow) % totalItems;
+            track.addEventListener("scroll", applyParallax);
         }
     
-        showItems();
-        setInterval(showItems, 5000);
+        /**
+         * Filter Menu Items Based on Category Selection
+         */
+        function filterMenu(category) {
+            const items = document.querySelectorAll(".menu-item");
+            const menuTitle = document.getElementById("menuTitle");
+    
+            items.forEach(item => {
+                const itemCategory = item.getAttribute("data-category");
+                item.style.display = category === "all" || itemCategory === category ? "block" : "none";
+            });
+    
+            menuTitle.innerText = category === "all" ? "All Menu Items" : `${category} Menu`;
+        }
+    
+        /**
+         * Cycle Through Menu Items Every Few Seconds
+         */
+        function cycleMenuItems() {
+            const items = document.querySelectorAll(".menu-item");
+            if (!items.length) return;
+    
+            let index = 0;
+            const totalItems = items.length;
+            const itemsToShow = 4;
+    
+            function showItems() {
+                items.forEach(item => item.classList.remove("active"));
+                for (let i = 0; i < itemsToShow; i++) {
+                    const itemIndex = (index + i) % totalItems;
+                    items[itemIndex].classList.add("active");
+                }
+                index = (index + itemsToShow) % totalItems;
+            }
+    
+            showItems();
+            setInterval(showItems, 5000);
+        }
+    
+        /**
+         * Initialize All Features
+         */
+        function initialize() {
+            setupAddToCart();
+            setupBannerCarousel();
+            setupParallaxEffect();
+            cycleMenuItems();
+        }
+    
+        initialize();
     });
-</script>
+    </script>
 <script src="{% static 'js/script.js' %}"></script>
 
 {% endblock %}

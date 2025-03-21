@@ -19,6 +19,50 @@
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
         .font-logo { font-family: 'Poppins', sans-serif; }
         .navbar { z-index: 1000; }
+        /* Base styles for the cart count */
+#cart-count {
+    position: absolute;
+    top: -7px; /* Adjust position relative to the cart emoji */
+    right: 32px;
+    font-size: 12px;
+    line-height: 1;
+    transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out;
+}
+
+/* Scale-up animation when the count updates */
+@keyframes scaleUp {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.5);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Pulse animation */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    }
+}
+
+/* Apply animations dynamically */
+.animate-scale {
+    animation: scaleUp 0.5s ease-in-out;
+}
+
+.animate-pulse {
+    animation: pulse 1s ease-in-out;
+}
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -74,7 +118,8 @@
 
                         <!-- Cart -->
                         <a href="/cart" class="text-white relative">
-                            🛒 Cart <span id="cart-count" class="bg-red-500 text-white px-2 rounded-full">0</span>
+                            🛒 Cart 
+                            <span id="cart-count" class="bg-red-500 text-white px-2 rounded-full animate-pulse">0</span>
                         </a>
                     </div>
                 </div>
@@ -142,7 +187,6 @@
         </div>
     </div>
 </div>
-            </div>
         </nav>
     </header>
 
@@ -152,7 +196,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white text-center py-4 mt-10">
+    <footer class="bg-gray-800 text-white text-center py-4 mt-10 mb-20">
         <p>&copy; 2025 Catering Project. All rights reserved.</p>
     </footer>
 
@@ -166,7 +210,7 @@
         });
 
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+<script>
     $(document).ready(function () {
         // Function to update the cart count
         function updateCartCount() {
@@ -216,7 +260,61 @@
             }
         });
     });
-    
+    function updateCartCount() {
+    fetch("/cart/count/")
+        .then(response => response.json())
+        .then(data => {
+            const cartCountElement = document.getElementById("cart-count");
+            if (cartCountElement) {
+                cartCountElement.innerText = data.count || 0;
+                cartCountElement.classList.add("cart-bounce");
+
+                // Remove animation after 500ms
+                setTimeout(() => {
+                    cartCountElement.classList.remove("cart-bounce");
+                }, 500);
+            }
+        })
+        .catch(error => console.error("Error updating cart count:", error));
+}
+
+function addToCart(itemId) {
+    fetch(`/cart/add/${itemId}/`, { method: "POST" })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateCartCount();
+            }
+        });
+}
+// Function to update the cart count with animation
+function updateCartCount(newCount) {
+    const cartCountElement = document.getElementById("cart-count");
+
+    if (!cartCountElement) return;
+
+    // Update the text content
+    cartCountElement.textContent = newCount;
+
+    // Trigger animations
+    cartCountElement.classList.add("animate-scale", "animate-pulse");
+
+    // Remove animations after they complete
+    setTimeout(() => {
+        cartCountElement.classList.remove("animate-scale", "animate-pulse");
+    }, 1000); // Match this duration with the CSS animation durations
+}
+
+// Example usage: Simulate adding an item to the cart
+document.addEventListener("DOMContentLoaded", function () {
+    let currentCount = parseInt(document.getElementById("cart-count").textContent);
+
+    // Simulate adding an item to the cart
+    document.querySelector(".add-to-cart-btn").addEventListener("click", function () {
+        currentCount += 1; // Increment the count
+        updateCartCount(currentCount); // Update the UI with animation
+    });
+});
     </script>
 </body>
 </html>

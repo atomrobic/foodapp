@@ -5,7 +5,7 @@ from myapp.views import (
     menu_item_detail, menu_views, dashboard_view, get_pending_orders, user_dashboard, order_success,
     update_order_status, user_login, update_quantity, remove_item, user_logout, catering_home,
     place_catering_order, order_list, add_menu_item,admin_login, delete_menu_item, add_category, edit_menu_item,
-    menu_report, add_to_cart, view_cart
+    menu_report, add_to_cart, view_cart,cart_count
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -62,6 +62,7 @@ urlpatterns = [
 
     path("admin/login/", user_login, name="admin_login"),  # Admin login page
         path("adminlogin/", admin_login, name="adminlogin"),  # Admin login page
+    path("cart/count/", cart_count, name="cart_count"),  # <-- Add this line
 
 
 ]   
