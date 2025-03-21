@@ -15,7 +15,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 
     # Authentication-related URLs
-    path("register/", register, name="register"),  # User registration page
+    path("", register, name="register"),  # User registration page
     path("login/", user_login, name="login"),  # User login page
     path("logout/", user_logout, name="logout"),  # User logout functionality
 
@@ -27,7 +27,7 @@ urlpatterns = [
     path('admindashboard/', dashboard_view, name='dashboard'),  # Admin dashboard view
 
     # Menu management URLs
-    path('', add_menu_item, name='add_menu_item'),  # Default route to add a menu item
+    path('add/', add_menu_item, name='add_menu_item'),  # Default route to add a menu item
     path("menu/delete/<int:item_id>/", delete_menu_item, name="delete_menu_item"),  # Delete a menu item
     path("add-category/", add_category, name="add_category"),  # Add a new category
     path("edit-menu-item/<int:item_id>/", edit_menu_item, name="edit_menu_item"),  # Edit an existing menu item
