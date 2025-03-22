@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from myapp.views import (
-    register, delete_address,cancel_order, category_detail,admin_dashboard,customer_detail, checkout, save_address, profile_view, menu_view,
+    register, delete_address,home,cancel_order, category_detail,admin_dashboard,customer_detail, checkout, save_address, profile_view, menu_view,
     menu_item_detail, menu_views, dashboard_view, get_pending_orders, user_dashboard, order_success,
     update_order_status, user_login, update_quantity, remove_item, user_logout, catering_home,
     place_catering_order, order_list, add_menu_item,admin_login, delete_menu_item, add_category, edit_menu_item,
@@ -25,6 +25,7 @@ urlpatterns = [
     path("adminorders/", order_list, name="admin_catering_orders"),  # List of all orders for admin
     path('update-order-status/<int:order_id>/', update_order_status, name='update_order_status'),  # Update order status (admin)
     path('admindashboard/', dashboard_view, name='dashboard'),  # Admin dashboard view
+    path("", home, name="home"),  # Renders index.html
 
     # Menu management URLs
     path('add/', add_menu_item, name='add_menu_item'),  # Default route to add a menu item

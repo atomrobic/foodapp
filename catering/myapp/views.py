@@ -516,6 +516,9 @@ def add_to_cart(request, item_id):
 
     return JsonResponse({"success": True, "message": message})
 
+def home(request):
+    return render(request, "index.html")
+
 def cart_count(request):
     """Return the total number of items in the user's cart."""
     cart_items = CartItem.objects.filter(cart__customer=request.user)
